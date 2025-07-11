@@ -106,11 +106,14 @@ public class SubTask extends Task {
 
 #### Пример создания задачи:  
 ```java  
-Task task = new Task(1, "Рефакторинг", "Обновить документацию", StatusTask.NEW);  
+Task task = new Task(manager.generatedId(), "Рефакторинг", "Обновить документацию", StatusTask.NEW);  
 ```  
   
-#### Пример работы с эпиком:  
+#### Пример работы с эпиком:
+
 ```java  
-Epic epic = new Epic(2, "Разработка", "Новый функционал");
-SubTask subTask = new SubTask(3, "Дизайн", "Создать макеты", epic.getId());  
+import service.TaskManager;
+
+Epic epic = new Epic("Разработка", "Новый функционал");
+SubTask subTask = new SubTask("Дизайн", "Создать макеты", epic.getId());  
 ```
