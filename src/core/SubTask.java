@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class SubTask extends Task {
     private final TaskManagerExceptionHandler exceptionHandler = new TaskManagerExceptionHandler();
-    private int epicId;
+    private final int epicId;
 
 
     public SubTask(int id, String name, String description, StatusTask status, int epicId) {
@@ -28,9 +28,8 @@ public class SubTask extends Task {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof SubTask)) return false;
+        if (!(obj instanceof SubTask subTask)) return false;
         if (!super.equals(obj)) return false;
-        SubTask subTask = (SubTask) obj;
         return epicId == subTask.epicId;
     }
 
@@ -44,9 +43,9 @@ public class SubTask extends Task {
         return "Core.model.SubTask{" +
                 "id=" + getId() +
                 ", name='" + getName() + '\'' +
-                ", status=" + getStatus() +
                 ", description='" + getDescription() + '\'' +
                 ", epicId=" + epicId +
+                ", status=" + getStatus() +
                 '}';
     }
 }

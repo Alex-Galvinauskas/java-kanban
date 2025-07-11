@@ -1,4 +1,4 @@
-package TaskManagerApp;
+package task.manager.app;
 
 import core.Epic;
 import core.StatusTask;

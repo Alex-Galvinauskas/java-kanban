@@ -5,10 +5,9 @@ import exceptions.TaskManagerExceptionHandler;
 import java.util.Objects;
 
 public class Task {
-    private final TaskManagerExceptionHandler exceptionHandler = new TaskManagerExceptionHandler();
     private int id;
-    private String name;
-    private String description;
+    private final String name;
+    private final String description;
     private StatusTask status;
 
     public Task(int id, String name, String description, StatusTask status) {
@@ -50,6 +49,17 @@ public class Task {
     public void setStatus(StatusTask status) {
         this.status = status;
     }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Task task)) return false;
+        return id == task.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 
     @Override
     public String toString() {
@@ -61,16 +71,5 @@ public class Task {
                 '}';
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Task)) return false;
-        Task task = (Task) obj;
-        return id == task.id;
-    }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }
