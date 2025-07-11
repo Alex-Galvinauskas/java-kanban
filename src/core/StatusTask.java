@@ -9,5 +9,4 @@ public enum StatusTask {
     StatusTask(String nameStatus) {
         this.nameStatus = nameStatus;
     }
-
 }

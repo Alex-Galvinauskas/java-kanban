@@ -88,9 +88,6 @@ public class Main {
         String allEpics = manager.getAllEpics().toString();
         System.out.println(allEpics);
 
-
-
-
     }
 }
 

@@ -1,7 +1,5 @@
 package core;
 
-import exceptions.TaskManagerExceptionHandler;
-
 import java.util.Objects;
 
 public class Task {
@@ -49,6 +47,7 @@ public class Task {
     public void setStatus(StatusTask status) {
         this.status = status;
     }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -70,6 +69,4 @@ public class Task {
                 ", status=" + status +
                 '}';
     }
-
-
 }
