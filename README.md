@@ -1,8 +1,13 @@
+<!-- -*- coding: utf-8 -*- -->
+<div align="right">
+  <a href="#english">English</a> | <a href="#russian">Русский</a>
+</div>
 
+<a id="russian"></a>
 # Java Kanban Task Manager
 
 ![Java](https://img.shields.io/badge/Java-17%2B-orange)
-![Version](https://img.shields.io/badge/version-1.0.1-blue)
+![Version](https://img.shields.io/badge/version-1.0.3-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 **Автор:** [Alex Galvinauskas](https://github.com/Alex-Galvinauskas)  
@@ -78,11 +83,11 @@ public class Task {
 ```  
 ### Особенности:
 
-Использует StatusTask (NEW/IN_PROGRESS/DONE)
+*Использует StatusTask (NEW/IN_PROGRESS/DONE)*
 
-Проверка равенства только по id
+*Проверка равенства только по id*
 
-Поддержка обработки исключений
+*Поддержка обработки исключений*
 
 ### Класс Epic (Наследник Task)  
 ```java
@@ -116,4 +121,122 @@ import service.TaskManager;
 
 Epic epic = new Epic("Разработка", "Новый функционал");
 SubTask subTask = new SubTask("Дизайн", "Создать макеты", epic.getId());  
+```  
+  
+  
+
+---  
+
+
+<a id="english"></a>  
+# Java Kanban Task Manager
+
+![Java](https://img.shields.io/badge/Java-17%2B-orange)
+![Version](https://img.shields.io/badge/version-1.0.3-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+**Author:** [Alex Galvinauskas](https://github.com/Alex-Galvinauskas)  
+**License:** [MIT](LICENSE)
+
+## 🚀 Description
+
+Task Manager is a task management system that supports:
+- Regular tasks (`Task`)
+- Epics (`Epic`) that can contain subtasks
+- Subtasks (`SubTask`) linked to epics
+
+Epic status is automatically calculated based on its subtasks' statuses.
+
+## 🔍 Features
+
+- **Task Management**:
+  - Create/update/delete all task types
+  - Automatic epic status updates
+  - Data validation on changes
+
+- **Information Retrieval**:
+  - Lists of all tasks/epics/subtasks
+  - Search by ID
+  - All subtasks for a specific epic
+
+## 🏗 Project Structure
+
+src/  
+├── main/  
+│ ├── java/  
+│ │ └── core/  
+│ │ ├── Task.java # Base task  
+│ │ ├── Epic.java # Epic (contains subtasks)  
+│ │ ├── SubTask.java # Subtask  
+│ │ └── StatusTask.java # Status enumeration  
+│ ├── exceptions/ # Error handling  
+│ └── service/ # TaskManager logic
+
+## 📦 `core` Package
+
+### `Task` Class (Base Task)
+
+```java
+/**
+ * Base task class
+ * Implements defensive copying pattern
+ */
+public class Task {
+    private int id;
+    private String name;
+    private String description;
+    private StatusTask status;
+    
+    // Constructors
+    public Task(int id, String name, String description, StatusTask status) {  }
+    public Task(Task other) {  }  // Copy constructor
+    
+    // Getters
+    public int getId() {  }
+    public String getName() {  }
+    
+    // Setters
+    public void setId(int id) {  }
+    public void setStatus(StatusTask status) { }
+    
+    // Overridden methods
+    @Override
+    public boolean equals(Object obj) {  }  // Compare by ID
+    @Override
+    public String toString() {  }          // String representation
+}  
+```
+## Key Features:
+*Uses StatusTask (NEW/IN_PROGRESS/DONE)*
+
+*Equality check by id only*
+
+*Exception handling support*
+
+### Epic Class (Task Subclass)
+```java
+public class Epic extends Task {
+private List<Integer> subtaskIds;  // Linked subtask IDs
+
+    // Automatically updates status based on subtasks
+    public void updateStatus() {  }
+}  
+```
+### SubTask Class (Task Subclass)
+```java
+public class SubTask extends Task {
+    private int epicId;  // Parent epic ID
+}  
+```
+## 🛠 Usage
+#### Task creation example:
+```java
+Task task = new Task(manager.generatedId(), "Refactoring", "Update documentation", StatusTask.NEW);  
+```
+#### Epic workflow example:
+```java
+import service.TaskManager;
+
+Epic epic = new Epic("Development", "New functionality");
+SubTask subTask = new SubTask("Design", "Create mockups", epic.getId());
 ```
