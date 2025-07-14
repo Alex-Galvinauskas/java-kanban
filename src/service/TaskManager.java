@@ -9,6 +9,12 @@ import exceptions.TaskManagerExceptionHandler;
 
 import java.util.*;
 
+/**
+ * Manages tasks, epics, and subtasks, providing CRUD operations and status management.
+ * Handles validation through TaskManagerExceptionHandler and maintains unique IDs for tasks.
+ * Supports updating Epic statuses based on their subtasks' statuses.
+ */
+
 public class TaskManager {
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, Epic> epics = new HashMap<>();
@@ -16,6 +22,14 @@ public class TaskManager {
     private final TaskManagerExceptionHandler exceptionHandler = new TaskManagerExceptionHandler();
     private int nextId = 1;
 
+
+    /**
+     * Creates a new task with the given parameters and assigns it a unique ID.
+     * Validates the task before creation and stores it in the task collection.
+     *
+     * @param task the task object to be created
+     * @return the unique identifier assigned to the created task
+     */
 
     public int createTask(Task task) {
         exceptionHandler.validateTaskForCreation(task, tasks.values());
@@ -26,6 +40,15 @@ public class TaskManager {
     }
 
 
+    /**
+     * Creates a new Epic task and adds it to the task manager.
+     * Validates the epic before creation using the exception handler.
+     * Generates a unique ID for the epic and stores it in the epics collection.
+     *
+     * @param epic the Epic object to be created and stored
+     * @return the unique identifier assigned to the newly created epic
+     */
+
     public int createEpic(Epic epic) {
         exceptionHandler.validateEpicForCreation(epic);
         int id = generateId();
@@ -33,6 +56,15 @@ public class TaskManager {
         epics.put(id, epic);
         return id;
     }
+
+    /**
+     * Creates a new subtask and adds it to the task manager.
+     * Validates the subtask before creation, generates a unique ID for it,
+     * adds it to the subtask collection, and updates the associated epic's status.
+     *
+     * @param subTask the subtask to be created
+     * @return the ID of the newly created subtask
+     */
 
     public int createSubTask(SubTask subTask) {
         exceptionHandler.validateSubTaskForCreation(subTask, epics);
@@ -48,23 +80,63 @@ public class TaskManager {
         return id;
     }
 
+    /**
+     * Retrieves a list containing all tasks currently managed by the TaskManager.
+     * The returned list is an unmodifiable copy of the internal task collection.
+     *
+     * @return an unmodifiable List containing all tasks
+     */
+
     public List<Task> getAllTasks() {
         return List.copyOf(tasks.values());
     }
+
+    /**
+     * Retrieves a task by its unique identifier.
+     * Returns a deep copy of the task if found, null otherwise.
+     *
+     * @param id the unique identifier of the task to retrieve
+     * @return a deep copy of the task if found, null otherwise
+     */
 
     public Task getTaskById(int id) {
         Task task = tasks.get(id);
         return task != null ? new Task(task) : null;
     }
 
+    /**
+     * Returns a list containing all epics in the task manager.
+     * The returned list is a defensive copy to prevent modification of the internal state.
+     *
+     * @return an unmodifiable list containing all epics
+     */
+
     public List<Epic> getAllEpics() {
         return List.copyOf(epics.values());
     }
+
+    /**
+     * Retrieves an epic task by its unique identifier.
+     * Returns a deep copy of the epic if found, or null if no epic exists with the given ID.
+     *
+     * @param id the unique identifier of the epic to retrieve
+     * @return a deep copy of the {@link Epic} object if found, null otherwise
+     */
 
     public Epic getEpicById(int id) {
         Epic epic = epics.get(id);
         return epic != null ? new Epic(epic) : null;
     }
+
+    /**
+     * Retrieves all subtasks associated with a specific epic task.
+     * Validates that the epic exists before retrieving subtasks.
+     * Returns an unmodifiable list of subtasks cloned from the original objects.
+     *
+     * @param epicId the ID of the epic task to find subtasks for
+     * @return an unmodifiable list of {@link SubTask} objects associated with the epic
+     * @throws RuntimeException if the epic with specified ID doesn't exist
+     */
 
     public List<SubTask> getSubTasksByEpicId(int epicId) {
         Epic epic = epics.get(epicId);
@@ -81,19 +153,48 @@ public class TaskManager {
         return Collections.unmodifiableList(result);
     }
 
+    /**
+     * Gets all subtasks.
+     *
+     * @return an unmodifiable list containing all subtasks
+     */
+
     public List<SubTask> getAllSubTasks() {
         return List.copyOf(subTasks.values());
     }
+
+    /**
+     * Retrieves a suTtask by its unique identifier.
+     * Returns a deep copy of the subTask if found, otherwise returns null.
+     *
+     * @param id the unique identifier of the subTask to retrieve
+     * @return a deep copy of the {@link SubTask} if found, null otherwise
+     */
 
     public SubTask getSubTaskById(int id) {
         SubTask subTask = subTasks.get(id);
         return subTask != null ? new SubTask(subTask) : null;
     }
 
+
+    /**
+     * Updates the specified task in the task manager.
+     * Validates the task before updating and replaces the existing task with a new instance.
+     *
+     * @param task the task to be updated
+     */
+
     public void updateTask(Task task) {
         exceptionHandler.validateTaskForUpdate(task, tasks);
         tasks.put(task.getId(), new Task(task));
     }
+    /**
+     * Updates the status of an Epic task based on the statuses of its subtasks.
+     * If the Epic has no subtasks, its status is set to NEW.
+     * Otherwise, the status is determined by checking all subtasks' statuses.
+     *
+     * @param epicId the ID of the Epic task to update
+     */
 
     private void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId);
@@ -109,6 +210,13 @@ public class TaskManager {
         determineEpicStatus(epic, statusCheck);
     }
 
+    /**
+     * Updates an existing subTask in the task manager.
+     * Validates the subTask before updating and ensures the associated epic's status is updated.
+     *
+     * @param subTask the sub task to be updated
+     */
+
     public void updateSubTask(SubTask subTask) {
         exceptionHandler.validateSubTaskForUpdate(subTask, subTasks, epics);
 
@@ -116,19 +224,35 @@ public class TaskManager {
         updateEpicStatus(subTask.getEpicId());
     }
 
+    /**
+     * Delete all tasks.
+     */
     public void deleteAllTasks() {
         tasks.clear();
     }
 
+    /**
+     * Delete task by id.
+     *
+     * @param id the id
+     */
     public void deleteTaskById(int id) {
         tasks.remove(id);
     }
 
+    /**
+     * Delete all epics.
+     */
     public void deleteAllEpics() {
         epics.clear();
         subTasks.clear();
     }
 
+    /**
+     * Delete epic by id.
+     *
+     * @param id the id
+     */
     public void deleteEpicById(int id) {
         Epic epic = epics.get(id);
         exceptionHandler.validateEpicExists(epic, id);
@@ -139,6 +263,9 @@ public class TaskManager {
         epics.remove(id);
     }
 
+    /**
+     * Delete all subTasks.
+     */
     public void deleteAllSubTasks() {
         subTasks.clear();
 
@@ -148,6 +275,11 @@ public class TaskManager {
         }
     }
 
+    /**
+     * Delete subTask by id.
+     *
+     * @param id the id
+     */
     public void deleteSubTaskById(int id) {
         SubTask subTask = subTasks.get(id);
         if (subTask != null) {
@@ -161,6 +293,11 @@ public class TaskManager {
         }
     }
 
+    /**
+     * Generate id int.
+     *
+     * @return the int
+     */
     public int generateId() {
         return nextId++;
     }
@@ -168,7 +305,14 @@ public class TaskManager {
     private void setEpicStatus(Epic epic, StatusTask status) {
         epic.setStatus(status);
     }
-
+    /**
+     * Checks the statuses of subtasks in the given list and updates the result accordingly.
+     * The method checks if any subtask is in progress, and if so, sets the corresponding flag in the result.
+     * It also checks if all subtasks are either NEW or DONE and updates the flags accordingly.
+     *
+     * @param subtaskIds the list of subtask IDs to check
+     * @return a {@link StatusCheckResult} object containing the status check results
+     */
     private StatusCheckResult checkSubTasksStatuses(List<Integer> subtaskIds) {
         StatusCheckResult result = new StatusCheckResult();
 
@@ -187,7 +331,16 @@ public class TaskManager {
 
         return result;
     }
-
+    /**
+     * Determines and sets the status of an Epic based on the provided status check result.
+     * The status is set to IN_PROGRESS if there are any subtasks in progress.
+     * If all subtasks are new, the status is set to NEW.
+     * If all subtasks are done, the status is set to DONE.
+     * Otherwise, defaults to setting the status to IN_PROGRESS.
+     *
+     * @param epic the Epic whose status needs to be determined
+     * @param statusCheck the result of checking subtask statuses
+     */
     private void determineEpicStatus(Epic epic, StatusCheckResult statusCheck) {
         if (statusCheck.isHasInProgress()) {
             setEpicStatus(epic, StatusTask.IN_PROGRESS);

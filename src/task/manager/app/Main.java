@@ -6,6 +6,8 @@ import core.SubTask;
 import core.Task;
 import service.TaskManager;
 
+import java.util.List;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -65,7 +67,7 @@ public class Main {
         System.out.println("Статус эпика после всех изменений: " + savedEpic.getStatus());
 
     Epic epic1 = new Epic(manager.generateId(), "Второй эпик", "Описание эпика");
-    int epicId1 = manager.createEpic(epic);
+    int epicId1 = manager.createEpic(epic1);
     System.out.println("Создан эпик с ID: " + epicId1);
 
         SubTask subTask3 = new SubTask(manager.generateId(), "Подзадача 3", "Описание 3", StatusTask.NEW, epicId);
@@ -74,8 +76,10 @@ public class Main {
         manager.deleteSubTaskById(subTaskId3);
         System.out.println("Подзадача с ID " + subTaskId3 + " удалена");
 
-        manager.getSubTasksByEpicId(epicId);
-        System.out.println("ID подзадач по ID эпика " + epicId + " " + epicId1);
+        List<SubTask> subTaskForEpic = manager.getSubTasksByEpicId(epicId);
+        System.out.println("ID подзадач по ID эпика " + epicId + " " + subTaskForEpic);
+        System.out.println("ID второго эпика: " + epic1.getId());
+
 
         String allSubTasks = manager.getAllSubTasks().toString();
         System.out.println(allSubTasks);
