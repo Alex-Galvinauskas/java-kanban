@@ -3,7 +3,7 @@
   <a href="#english">English</a> | <a href="#russian">Русский</a>
 </div>
 
-<a id="russian"></a>
+<an id="russian"></a>
 # Java Kanban Task Manager
 
 ![Java](https://img.shields.io/badge/Java-17%2B-orange)
@@ -53,7 +53,7 @@ src/
 
 ```java
 /**
- * Базовый класс задачи
+ * Базовый класс задачи.
  * Реализует паттерн защитного копирования
  */
 public class Task {
@@ -128,7 +128,7 @@ SubTask subTask = new SubTask("Дизайн", "Создать макеты", epi
 ---  
 
 
-<a id="english"></a>  
+<an id="english"></a>  
 # Java Kanban Task Manager
 
 ![Java](https://img.shields.io/badge/Java-17%2B-orange)

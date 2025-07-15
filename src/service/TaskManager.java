@@ -10,9 +10,10 @@ import exceptions.TaskManagerExceptionHandler;
 import java.util.*;
 
 /**
- * Manages tasks, epics, and subtasks, providing CRUD operations and status management.
- * Handles validation through TaskManagerExceptionHandler and maintains unique IDs for tasks.
- * Supports updating Epic statuses based on their subtasks' statuses.
+ * Manages tasks, epics, and subtasks, providing functionality for their creation, retrieval,
+ * updating, and deletion. Maintains relationships between epics and their subtasks, and handles
+ * status propagation from subtasks to their parent epics. Uses an exception handler for input
+ * validation and maintains unique identifiers for all tasks.
  */
 
 public class TaskManager {
@@ -164,7 +165,7 @@ public class TaskManager {
     }
 
     /**
-     * Retrieves a suTtask by its unique identifier.
+     * Retrieves a subTask by its unique identifier.
      * Returns a deep copy of the subTask if found, otherwise returns null.
      *
      * @param id the unique identifier of the subTask to retrieve
@@ -214,7 +215,7 @@ public class TaskManager {
      * Updates an existing subTask in the task manager.
      * Validates the subTask before updating and ensures the associated epic's status is updated.
      *
-     * @param subTask the sub task to be updated
+     * @param subTask the subTask to be updated
      */
 
     public void updateSubTask(SubTask subTask) {
@@ -224,9 +225,7 @@ public class TaskManager {
         updateEpicStatus(subTask.getEpicId());
     }
 
-    /**
-     * Delete all tasks.
-     */
+
     public void deleteAllTasks() {
         tasks.clear();
     }
@@ -240,19 +239,20 @@ public class TaskManager {
         tasks.remove(id);
     }
 
-    /**
-     * Delete all epics.
-     */
+
     public void deleteAllEpics() {
         epics.clear();
         subTasks.clear();
     }
 
     /**
-     * Delete epic by id.
+     * Deletes an epic task by its ID. All subtasks associated with the epic are also removed.
+     * Validates that the epic exists before deletion using the exception handler.
      *
-     * @param id the id
+     * @param id the ID of the epic to be deleted
+     * @throws Exception if the epic with the specified ID does not exist (handled by exceptionHandler)
      */
+
     public void deleteEpicById(int id) {
         Epic epic = epics.get(id);
         exceptionHandler.validateEpicExists(epic, id);
@@ -263,9 +263,6 @@ public class TaskManager {
         epics.remove(id);
     }
 
-    /**
-     * Delete all subTasks.
-     */
     public void deleteAllSubTasks() {
         subTasks.clear();
 
@@ -276,10 +273,13 @@ public class TaskManager {
     }
 
     /**
-     * Delete subTask by id.
+     * Deletes a subtask with the specified ID from the task manager.
+     * If the subtask exists, it is removed from the subtasks map and also from its associated epic's subtask list.
+     * After removal, the status of the associated epic is updated.
      *
-     * @param id the id
+     * @param id the ID of the subtask to be deleted
      */
+
     public void deleteSubTaskById(int id) {
         SubTask subTask = subTasks.get(id);
         if (subTask != null) {
@@ -294,10 +294,12 @@ public class TaskManager {
     }
 
     /**
-     * Generate id int.
+     * Generates and returns a unique identifier for tasks.
+     * The identifier is auto-incremented each time this method is called.
      *
-     * @return the int
+     * @return a unique integer identifier
      */
+
     public int generateId() {
         return nextId++;
     }
