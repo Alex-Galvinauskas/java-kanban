@@ -16,7 +16,7 @@ import java.util.*;
  * validation and maintains unique identifiers for all tasks.
  */
 
-public class TaskManager {
+public class InMemoryTaskManager {
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, Epic> epics = new HashMap<>();
     private final Map<Integer, SubTask> subTasks = new HashMap<>();
@@ -169,12 +169,13 @@ public class TaskManager {
      * Returns a deep copy of the subTask if found, otherwise returns null.
      *
      * @param id the unique identifier of the subTask to retrieve
-     * @return a deep copy of the {@link SubTask} if found, null otherwise
      */
 
-    public SubTask getSubTaskById(int id) {
+    public void getSubTaskById(int id) {
         SubTask subTask = subTasks.get(id);
-        return subTask != null ? new SubTask(subTask) : null;
+        if (subTask != null) {
+            new SubTask(subTask);
+        }
     }
 
 
@@ -250,7 +251,7 @@ public class TaskManager {
      * Validates that the epic exists before deletion using the exception handler.
      *
      * @param id the ID of the epic to be deleted
-     * @throws Exception if the epic with the specified ID does not exist (handled by exceptionHandler)
+     * @throws RuntimeException if the epic with the specified ID does not exist (handled by exceptionHandler)
      */
 
     public void deleteEpicById(int id) {

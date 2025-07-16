@@ -117,7 +117,7 @@ Task task = new Task(manager.generatedId(), "Рефакторинг", "Обно�
 #### Пример работы с эпиком:
 
 ```java  
-import service.TaskManager;
+
 
 Epic epic = new Epic("Разработка", "Новый функционал");
 SubTask subTask = new SubTask("Дизайн", "Создать макеты", epic.getId());  
@@ -234,8 +234,9 @@ public class SubTask extends Task {
 Task task = new Task(manager.generatedId(), "Refactoring", "Update documentation", StatusTask.NEW);  
 ```
 #### Epic workflow example:
+
 ```java
-import service.TaskManager;
+
 
 Epic epic = new Epic("Development", "New functionality");
 SubTask subTask = new SubTask("Design", "Create mockups", epic.getId());

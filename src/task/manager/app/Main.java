@@ -4,14 +4,14 @@ import core.Epic;
 import core.StatusTask;
 import core.SubTask;
 import core.Task;
-import service.TaskManager;
+import service.InMemoryTaskManager;
 
 import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager manager = new TaskManager();
+        InMemoryTaskManager manager = new InMemoryTaskManager();
 
         Task task1 = new Task(manager.generateId(),"Задача 1", "Описание задачи",
                 StatusTask.NEW);
