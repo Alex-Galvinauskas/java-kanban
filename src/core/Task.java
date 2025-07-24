@@ -2,26 +2,12 @@ package core;
 
 import java.util.Objects;
 
-/**
- * Represents a task with an identifier, name, description, and status.
- * Provides methods to access and modify task properties and implements standard
- * Java object methods (equals, hashCode, toString).
- */
-
 public class Task {
     private int id;
     private final String name;
     private final String description;
     private StatusTask status;
 
-    /**
-     * Constructs a new Task with the specified id, name, description, and status.
-     *
-     * @param id          the unique identifier for the task
-     * @param name        the name of the task
-     * @param description the detailed description of the task
-     * @param status      the current status of the task (e.g., NEW, IN_PROGRESS, DONE)
-     */
     public Task(int id, String name, String description, StatusTask status) {
         this.id = id;
         this.name = name;
@@ -29,16 +15,11 @@ public class Task {
         this.status = status;
     }
 
-    /**
-     * Constructs a new Task by copying all fields from another Task instance (copy constructor).
-     *
-     * @param other the Task instance to copy fields from
-     */
-    public Task(Task other) {
-        this.id = other.id;
-        this.name = other.name;
-        this.description = other.description;
-        this.status = other.status;
+    public Task(Task task) {
+        this.id = task.id;
+        this.name = task.name;
+        this.description = task.description;
+        this.status = task.status;
     }
 
     public String getName() {
