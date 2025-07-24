@@ -496,7 +496,7 @@ public class InMemoryTaskManagerTest {
 
             assertTrue(taskManager.getHistory().isEmpty());
         }
-
+    }
         @Nested
         public class ManagersTest {
             @Test
@@ -563,5 +563,5 @@ public class InMemoryTaskManagerTest {
                 assertEquals(copy.getEpicId(), original.getEpicId());
             }
         }
-    }
+
 }
