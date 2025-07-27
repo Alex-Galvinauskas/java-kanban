@@ -4,7 +4,7 @@ import core.Task;
 
 import java.util.List;
 
-public interface HistoryManagerInterface {
+public interface HistoryManager {
 
     List<Task> getHistory();
 

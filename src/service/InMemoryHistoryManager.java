@@ -1,14 +1,14 @@
 package service;
 
 import core.Task;
-import managers.HistoryManagerInterface;
+import managers.HistoryManager;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class InMemoryHistoryManager implements HistoryManagerInterface {
+public class InMemoryHistoryManager implements HistoryManager {
 
     public static final int MAX_SIZE = 10;
     private final List<Task> history = new LinkedList<>();
@@ -31,14 +31,19 @@ public class InMemoryHistoryManager implements HistoryManagerInterface {
     }
 
     private void addToHistory(Task task) {
+        if (task == null) return;
+        removeIfExists(task.getId());
         historyMap.put(task.getId(), task);
         history.add(task);
+        removeOldest();
     }
 
     public void removeIfExists(int id) {
         if (historyMap.containsKey(id)) {
             Task task = historyMap.remove(id);
-            history.remove(task);
+            if (task != null) {
+                history.remove(task);
+            }
         }
     }
 

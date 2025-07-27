@@ -6,7 +6,7 @@ import core.Task;
 
 import java.util.List;
 
-public interface TaskManagerInterface {
+public interface TaskManager {
     int createTask(Task task);
 
     int createEpic(Epic epic);

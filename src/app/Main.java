@@ -4,12 +4,17 @@ import core.Epic;
 import core.StatusTask;
 import core.SubTask;
 import core.Task;
+import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;
+
+import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) {
         InMemoryTaskManager manager = new InMemoryTaskManager();
+        InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
+
 
         Task task1 = new Task(manager.generateId(),"Задача 1", "Описание задачи",
                 StatusTask.NEW);
@@ -34,8 +39,8 @@ public class Main {
         int epicId = manager.createEpic(epic);
         System.out.println("Создан эпик с ID: " + epicId);
 
-        SubTask subTask1 = new SubTask(epicId, "Подзадача 1", "Описание 1", StatusTask.NEW, epicId);
-        SubTask subTask2 = new SubTask(epicId, "Подзадача 2", "Описание 2", StatusTask.NEW, epicId);
+        SubTask subTask1 = new SubTask(manager.generateId(), "Подзадача 1", "Описание 1", StatusTask.NEW, epicId);
+        SubTask subTask2 = new SubTask(manager.generateId(), "Подзадача 2", "Описание 2", StatusTask.NEW, epicId);
 
         int subTaskId1 = manager.createSubTask(subTask1);
         int subTaskId2 = manager.createSubTask(subTask2);
@@ -64,11 +69,11 @@ public class Main {
         savedEpic = manager.getEpicById(epicId);
         System.out.println("Статус эпика после всех изменений: " + savedEpic.getStatus());
 
-    Epic epic1 = new Epic(manager.generateId(), "Второй эпик", "Описание эпика");
-    int epicId1 = manager.createEpic(epic);
-    System.out.println("Создан эпик с ID: " + epicId1);
+        int epicId1 = manager.createEpic(epic);
+        System.out.println("Создан эпик с ID: " + epicId1);
 
-        SubTask subTask3 = new SubTask(manager.generateId(), "Подзадача 3", "Описание 3", StatusTask.NEW, epicId);
+        SubTask subTask3 = new SubTask(manager.generateId(), "Подзадача 3",
+                "Описание 3", StatusTask.NEW, epicId);
         int subTaskId3 = subTask3.getId();
         System.out.println("ID подзадачи " + subTaskId3);
         manager.deleteSubTaskById(subTaskId3);
@@ -88,6 +93,30 @@ public class Main {
         String allEpics = manager.getAllEpics().toString();
         System.out.println(allEpics);
 
+        System.out.println("------------------------------------");
+
+        Task task3 = new Task(manager.generateId(), "Задача 3",
+                "Описание задачи", StatusTask.NEW);
+        int taskId3 = manager.createTask(task3);
+        Task task4 = new Task(manager.generateId(), "Задача 4",
+                "Описание задачи", StatusTask.NEW);
+        int taskId4 = manager.createTask(task4);
+        Epic epic2 = new Epic(manager.generateId(), "Epic 2", "Epic 2 description");
+        int epicId2 = manager.createEpic(epic2);
+        SubTask subTask4 = new SubTask(manager.generateId(), "subTask 4",
+                "subTask 4 description",StatusTask.NEW, epicId2);
+        SubTask subTask5 = new SubTask(manager.generateId(), "subTask 5",
+                "subTask 5 description", StatusTask.IN_PROGRESS, epicId2);
+        int subTaskId4 = manager.createSubTask(subTask4);
+        int subTaskId5 = manager.createSubTask(subTask5);
+
+        historyManager.add(task3);
+        historyManager.add(epic2);
+        historyManager.add(subTask4);
+        historyManager.add(epic);
+
+        System.out.println("История просмотра: ");
+        historyManager.getHistory().forEach(System.out::println);
     }
 }
 

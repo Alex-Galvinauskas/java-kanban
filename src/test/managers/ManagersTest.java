@@ -16,7 +16,11 @@ public class ManagersTest {
     @Test
     @DisplayName("Проверка создания менеджера задач по умолчанию")
     void getDefault_ShouldReturnInMemoryTaskManagerInstance() {
+
+        //When
         taskManager = Managers.getDefault();
+
+        //Then
         assertNotNull(taskManager);
         assertInstanceOf(InMemoryTaskManager.class, taskManager);
     }
@@ -24,7 +28,11 @@ public class ManagersTest {
     @Test
     @DisplayName("Проверка создания менеджера истории по умолчанию")
     void getDefaultHistory_ShouldReturnInMemoryHistoryManagerInstance() {
+
+        //When
         historyManager = Managers.getDefaultHistory();
+
+        //Then
         assertNotNull(historyManager);
         assertInstanceOf(InMemoryHistoryManager.class, historyManager);
     }

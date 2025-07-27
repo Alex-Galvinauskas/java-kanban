@@ -62,11 +62,10 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Core.model.Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", status=" + status +
-                '}';
+        return "Задача: " +
+                "Id: " + id +
+                ", Имя: " + name +
+                ", Описание: " + description +
+                ", Статус: " + status;
     }
 }

@@ -5,12 +5,12 @@ import core.StatusTask;
 import core.SubTask;
 import core.Task;
 import exceptions.TaskValidator;
-import managers.TaskManagerInterface;
+import managers.TaskManager;
 
 
 import java.util.*;
 
-public class InMemoryTaskManager implements TaskManagerInterface {
+public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, Epic> epics = new HashMap<>();
     private final Map<Integer, SubTask> subTasks = new HashMap<>();
@@ -32,8 +32,8 @@ public class InMemoryTaskManager implements TaskManagerInterface {
     @Override
     public int createEpic(Epic epic) {
         validator.validateForEpicCreation(epic);
-        if(epic.getId() == 0) {
-        epic.setId(generateId());
+        if (epic.getId() == 0) {
+            epic.setId(generateId());
         }
         epics.put(epic.getId(), epic);
         return epic.getId();
@@ -48,8 +48,8 @@ public class InMemoryTaskManager implements TaskManagerInterface {
             throw new IllegalArgumentException("Подзадача не может быть своим же эпиком");
         }
 
-        if(subTask.getId() == 0) {
-        subTask.setId(generateId());
+        if (subTask.getId() == 0) {
+            subTask.setId(generateId());
         }
         validator.validateForSubTaskCreation(subTask, epics);
 
@@ -159,12 +159,9 @@ public class InMemoryTaskManager implements TaskManagerInterface {
 
     @Override
     public void deleteTaskById(int id) {
-        Set<Integer> taskIds = new HashSet<>(tasks.keySet());
         validator.validatePositiveId(id);
         tasks.remove(id);
-        for (Integer taskId : taskIds) {
-            historyManager.removeIfExists(taskId);
-        }
+        historyManager.removeIfExists(id);
     }
 
     @Override
@@ -185,7 +182,9 @@ public class InMemoryTaskManager implements TaskManagerInterface {
 
         for (int subtaskId : epic.getSubTaskIds()) {
             subTasks.remove(subtaskId);
+            historyManager.removeIfExists(subtaskId);
         }
+        historyManager.removeIfExists(id);
         epics.remove(id);
     }
 
@@ -217,6 +216,7 @@ public class InMemoryTaskManager implements TaskManagerInterface {
                 epic.removeSubTaskId(id);
                 updateEpicStatus(epic.getId());
             }
+            historyManager.removeIfExists(id);
         }
     }
 

@@ -64,15 +64,19 @@ public class TaskValidator {
         }
     }
 
-    public void validateNotDuplicate(Task newTask, Collection<Task> existingTasks) {
+    public boolean validateNotDuplicate(Task newTask, Collection<Task> existingTasks) {
+        if (existingTasks == null) {
+            return true;
+        }
         boolean isDuplicate = existingTasks.stream()
                 .anyMatch(task -> !isSameTask(newTask, task) && Objects.equals(task.getName(), newTask.getName()));
         if (isDuplicate) {
             throw new IllegalArgumentException("Такая задача " + newTask.getName() + " уже существует");
         }
+        return isDuplicate;
     }
 
-    private boolean isSameTask(Task task1, Task task2) {
+    public boolean isSameTask(Task task1, Task task2) {
         return task1.getId() == task2.getId() && task1.getName().equals(task2.getName());
     }
 }

@@ -36,9 +36,9 @@ public final class Epic extends Task {
         }
     }
 
-    public boolean removeSubTaskId(int subTaskId) {
+    public void removeSubTaskId(int subTaskId) {
         validator.validatePositiveId(subTaskId);
-        return subTaskIds.remove(Integer.valueOf(subTaskId));
+        subTaskIds.remove(Integer.valueOf(subTaskId));
     }
 
     public void clearSubTaskIds() {
@@ -60,12 +60,11 @@ public final class Epic extends Task {
 
     @Override
     public String toString() {
-        return "Epic{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
-                ", subTaskIds=" + subTaskIds +
-                '}';
+        return "Эпик: " +
+                "Id: " + getId() +
+                ", Имя:'" + getName() +
+                ", Описание: " + getDescription() +
+                ", Статус: " + getStatus() +
+                ", Id подзадач: " + subTaskIds;
     }
 }
