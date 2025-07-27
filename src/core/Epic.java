@@ -24,6 +24,13 @@ public final class Epic extends Task {
         this.subTaskIds = new ArrayList<>(other.subTaskIds);
     }
 
+    public Epic(String description, String name) {
+        super(description, name);
+        this.subTaskIds = new ArrayList<>();
+        this.setStatus(StatusTask.NEW);
+    }
+
+
 
     public List<Integer> getSubTaskIds() {
         return Collections.unmodifiableList(subTaskIds);

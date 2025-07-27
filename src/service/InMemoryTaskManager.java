@@ -21,26 +21,30 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int createTask(Task task) {
-        validator.validateTaskForCreation(task, tasks.values());
+        validator.validateNotNull(task, "Задача");
         if (task.getId() == 0) {
             task.setId(generateId());
         }
+        validator.validateTaskForCreation(task, tasks.values());
         tasks.put(task.getId(), task);
         return task.getId();
     }
 
     @Override
     public int createEpic(Epic epic) {
-        validator.validateForEpicCreation(epic);
         if (epic.getId() == 0) {
             epic.setId(generateId());
         }
+        validator.validateForEpicCreation(epic);
         epics.put(epic.getId(), epic);
         return epic.getId();
     }
 
     @Override
     public int createSubTask(SubTask subTask) {
+        if (subTask.getId() == 0) {
+            subTask.setId(generateId());
+        }
         if (subTask == null) {
             throw new IllegalArgumentException("Подзадача не может быть null");
         }
@@ -48,9 +52,6 @@ public class InMemoryTaskManager implements TaskManager {
             throw new IllegalArgumentException("Подзадача не может быть своим же эпиком");
         }
 
-        if (subTask.getId() == 0) {
-            subTask.setId(generateId());
-        }
         validator.validateForSubTaskCreation(subTask, epics);
 
         subTasks.put(subTask.getId(), subTask);

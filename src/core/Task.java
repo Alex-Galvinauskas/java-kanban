@@ -22,10 +22,15 @@ public class Task {
         this.status = task.status;
     }
 
+    public Task(String description, String name) {
+        this.description = description;
+        this.name = name;
+        this.status = StatusTask.NEW;
+    }
+
     public String getName() {
         return name;
     }
-
 
     public int getId() {
         return id;

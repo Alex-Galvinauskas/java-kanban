@@ -6,6 +6,7 @@ import core.SubTask;
 import core.Task;
 import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;
+import app.console.*;
 
 import java.util.List;
 
@@ -14,7 +15,10 @@ public class Main {
     public static void main(String[] args) {
         InMemoryTaskManager manager = new InMemoryTaskManager();
         InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
+        TaskManagerConsoleUI consoleUI = new TaskManagerConsoleUI(
+                new java.util.Scanner(System.in), true);
 
+        consoleUI.start();
 
         Task task1 = new Task(manager.generateId(),"Задача 1", "Описание задачи",
                 StatusTask.NEW);
