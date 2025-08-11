@@ -10,6 +10,10 @@ import managers.TaskManager;
 
 import java.util.*;
 
+/**
+ * @link TaskManager
+ * Управляет задачами, эпиками и подзадачами, поддерживает историю просмотров.
+ */
 public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, Epic> epics = new HashMap<>();
@@ -18,7 +22,12 @@ public class InMemoryTaskManager implements TaskManager {
     private final TaskValidator validator = new TaskValidator();
     private int nextId = 1;
 
-
+    /**
+     * Создает задачу
+     * @param task задача для создания (не может быть null)
+     * @return id созданной задачи
+     * @throws IllegalArgumentException если задача не прошла валидацию
+     */
     @Override
     public int createTask(Task task) {
         validator.validateNotNull(task, "Задача");
@@ -30,6 +39,12 @@ public class InMemoryTaskManager implements TaskManager {
         return task.getId();
     }
 
+    /**
+     * Создает эпик
+     * @param epic эпик для создания (не может быть null)
+     * @return id созданного эпика
+     * @throws IllegalArgumentException если эпик не прошел валидацию
+     */
     @Override
     public int createEpic(Epic epic) {
         if (epic.getId() == 0) {
@@ -40,6 +55,12 @@ public class InMemoryTaskManager implements TaskManager {
         return epic.getId();
     }
 
+    /**
+     * Создает подзадачу
+     * @param subTask подзадача для создания (не может быть null)
+     * @return id созданной подзадачи
+     * @throws IllegalArgumentException если подзадача не прошла валидацию
+     */
     @Override
     public int createSubTask(SubTask subTask) {
         if (subTask.getId() == 0) {
@@ -62,24 +83,45 @@ public class InMemoryTaskManager implements TaskManager {
         return subTask.getId();
     }
 
+    /**
+     * @return неизменяемый список всех задач
+     */
     @Override
     public List<Task> getAllTasks() {
         return List.copyOf(tasks.values());
     }
 
+    /**
+     * Возвращает задачу по id
+     * @param id задачи
+     * @return копию задачи или null если задача не найдена
+     * @throws IllegalArgumentException если id не положительный
+     */
     @Override
     public Task getTaskById(int id) {
         validator.validatePositiveId(id);
         Task task = tasks.get(id);
-        historyManager.add(task);
-        return task != null ? new Task(task) : null;
+        if (task != null) {
+            historyManager.add(task);
+            return new Task(task);
+        }
+        return null;
     }
 
+    /**
+     * @return неизменяемый список всех эпиков
+     */
     @Override
     public List<Epic> getAllEpics() {
         return List.copyOf(epics.values());
     }
 
+    /**
+     * Возвращает эпик по id
+     * @param id эпика
+     * @return копию эпика или null если эпик не найден
+     * @throws IllegalArgumentException если id не положительный
+     */
     @Override
     public Epic getEpicById(int id) {
         validator.validatePositiveId(id);
@@ -88,6 +130,12 @@ public class InMemoryTaskManager implements TaskManager {
         return epic != null ? new Epic(epic) : null;
     }
 
+    /**
+     * Возвращает список подзадач для указанного эпика.
+     * @param epicId id эпика
+     * @return неизменяемый список подзадач
+     * @throws IllegalArgumentException если id не положительный или эпик не существует
+     */
     @Override
     public List<SubTask> getSubTasksByEpicId(int epicId) {
         validator.validatePositiveId(epicId);
@@ -101,15 +149,23 @@ public class InMemoryTaskManager implements TaskManager {
                 result.add(new SubTask(subTask));
             }
         }
-
-        return Collections.unmodifiableList(result);
+        return List.copyOf(result);
     }
 
+    /**
+     * @return неизменяемый список всех подзадач
+     */
     @Override
     public List<SubTask> getAllSubTasks() {
         return List.copyOf(subTasks.values());
     }
 
+    /**
+     * Возвращает подзадачу по id
+     * @param id подзадачи
+     * @return копию подзадачи или null если подзадача не найдена
+     * @throws IllegalArgumentException если id не положительный
+     */
     @Override
     public SubTask getSubTaskById(int id) {
         validator.validatePositiveId(id);
@@ -118,16 +174,29 @@ public class InMemoryTaskManager implements TaskManager {
         return subTask != null ? new SubTask(subTask) : null;
     }
 
+    /**
+     * @return неизменяемый список истории в порядке просмотра задач
+     */
+    @Override
     public Collection<Task> getHistory() {
         return historyManager.getHistory();
     }
 
+    /**
+     * Обновляет задачу
+     * @param task с обновленными данными
+     * @throws IllegalArgumentException если задача не прошла валидацию
+     */
     @Override
     public void updateTask(Task task) {
         validator.validateTaskForUpdate(task, tasks);
         tasks.put(task.getId(), new Task(task));
     }
 
+    /**
+     * Обновляет статус эпика
+     * @param epicId id эпика
+     */
     private void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId);
         if (epic == null) return;
@@ -142,6 +211,11 @@ public class InMemoryTaskManager implements TaskManager {
         determineEpicStatus(epic, statusCheck);
     }
 
+    /**
+     * Обновляет подзадачу
+     * @param subTask с обновленными данными
+     * @throws IllegalArgumentException если подзадача не прошла валидацию
+     */
     @Override
     public void updateSubTask(SubTask subTask) {
         validator.validateSubTaskForUpdate(subTask, subTasks, epics);
@@ -149,32 +223,48 @@ public class InMemoryTaskManager implements TaskManager {
         updateEpicStatus(subTask.getEpicId());
     }
 
+    /**
+     * Удаляет все задачи.
+     * Очищает историю.
+     */
     @Override
     public void deleteAllTasks() {
         Set<Integer> taskIds = new HashSet<>(tasks.keySet());
         tasks.clear();
         for (Integer id : taskIds) {
-            historyManager.removeIfExists(id);
+            historyManager.remove(id);
         }
     }
 
+    /**
+     * Удаляет задачу по id
+     * @param id задачи
+     */
     @Override
     public void deleteTaskById(int id) {
         validator.validatePositiveId(id);
         tasks.remove(id);
-        historyManager.removeIfExists(id);
+        historyManager.remove(id);
     }
 
+    /**
+     * Удаляет все эпики.
+     * Очищает историю для эпиков и подзадач
+     */
     @Override
     public void deleteAllEpics() {
         Set<Integer> epicIds = new HashSet<>(epics.keySet());
         epics.clear();
         for (Integer id : epicIds) {
-            historyManager.removeIfExists(id);
+            historyManager.remove(id);
             deleteAllSubTasks();
         }
     }
 
+    /**
+     * Удаляет эпик по id
+     * @param id эпика
+     */
     @Override
     public void deleteEpicById(int id) {
         validator.validatePositiveId(id);
@@ -183,12 +273,16 @@ public class InMemoryTaskManager implements TaskManager {
 
         for (int subtaskId : epic.getSubTaskIds()) {
             subTasks.remove(subtaskId);
-            historyManager.removeIfExists(subtaskId);
+            historyManager.remove(subtaskId);
         }
-        historyManager.removeIfExists(id);
+        historyManager.remove(id);
         epics.remove(id);
     }
 
+    /**
+     * Удаляет все подзадачи.
+     * Обновляет статусы эпиков и очищает историю
+     */
     @Override
     public void deleteAllSubTasks() {
         Set<Integer> subTaskIds = new HashSet<>(subTasks.keySet());
@@ -196,7 +290,7 @@ public class InMemoryTaskManager implements TaskManager {
         subTasks.clear();
 
         for (Integer id : subTaskIds) {
-            historyManager.removeIfExists(id);
+            historyManager.remove(id);
         }
 
         for (Epic epic : epics.values()) {
@@ -205,6 +299,10 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
+    /**
+     * Удаляет подзадачу по id
+     * @param id подзадачи
+     */
     @Override
     public void deleteSubTaskById(int id) {
         validator.validatePositiveId(id);
@@ -217,19 +315,32 @@ public class InMemoryTaskManager implements TaskManager {
                 epic.removeSubTaskId(id);
                 updateEpicStatus(epic.getId());
             }
-            historyManager.removeIfExists(id);
+            historyManager.remove(id);
         }
     }
 
+    /**
+     * @return новый уникальный идентификатор
+     */
     @Override
     public int generateId() {
         return nextId++;
     }
 
+    /**
+     * Устанавливает статусы эпика
+     * @param epic для обновления
+     * @param status новый статус
+     */
     private void setEpicStatus(Epic epic, StatusTask status) {
         epic.setStatus(status);
     }
 
+    /**
+     * Проверяет статусы подзадач
+     * @param subtaskIds список id подзадач
+     * @return результат проверки
+     */
     private StatusCheckResult checkSubTasksStatuses(List<Integer> subtaskIds) {
         StatusCheckResult result = new StatusCheckResult();
 
@@ -249,6 +360,11 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
+    /**
+     * Определяет статус эпика
+     * @param epic для обновления
+     * @param statusCheck результат проверки подзадач
+     */
     private void determineEpicStatus(Epic epic, StatusCheckResult statusCheck) {
         if (statusCheck.isHasInProgress()) {
             setEpicStatus(epic, StatusTask.IN_PROGRESS);
