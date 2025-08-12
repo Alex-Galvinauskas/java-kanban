@@ -133,13 +133,23 @@ public class TaskValidator {
     }
 
     /**
-     * Проверяет, являются ли задачи одинаковыми по id и имени
+     * Проверяет, являются ли задачи одинаковыми если:
+     * Это один и тот же объект, или имеют одинаковые id и имена
      * @param task1 для сравнения
      * @param task2 для сравнения
      * @return true, если задачи одинаковые, иначе false
      */
     public boolean isSameTask(Task task1, Task task2) {
-        return task1.getId() == task2.getId() && task1.getName().equals(task2.getName());
+        if (task1 == task2) {
+            return true;
+        }
+
+        if (task1 == null || task2 == null) {
+            return false;
+        }
+
+        return Objects.equals(task1.getId(), task2.getId())
+                && Objects.equals(task1.getName(), task2.getName());
     }
 }
 
