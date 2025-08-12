@@ -8,19 +8,17 @@ import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;
 import app.console.*;
 
-import java.util.List;
-
 public class Main {
 
     public static void main(String[] args) {
         InMemoryTaskManager manager = new InMemoryTaskManager();
         InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
-        TaskManagerConsoleUI consoleUI = new TaskManagerConsoleUI(
+        TaskManagerConsoleUi consoleUI = new TaskManagerConsoleUi(
                 new java.util.Scanner(System.in), true);
 
-        consoleUI.start();
+        /*consoleUI.start();*/
 
-        Task task1 = new Task(manager.generateId(),"Задача 1", "Описание задачи",
+        /*Task task1 = new Task(manager.generateId(),"Задача 1", "Описание задачи",
                 StatusTask.NEW);
         int taskId1 = manager.createTask(task1);
         System.out.println("Создана задача с ID: " + taskId1);
@@ -119,7 +117,60 @@ public class Main {
         historyManager.add(subTask4);
         historyManager.add(epic);
 
+        historyManager.add(new Task(1, "Task", "desc", StatusTask.NEW));
+        historyManager.add(new Task(1, "Task", "desc", StatusTask.IN_PROGRESS));
+        historyManager.add(new Task(1, "Task", "desc", StatusTask.DONE));
+
         System.out.println("История просмотра: ");
+        historyManager.getHistory().forEach(System.out::println);
+        */
+
+        //тест пользовательского сценария
+        Task task1 = new Task(manager.generateId(), "Task1",
+                "Task1 description", StatusTask.NEW);
+        Task task2 = new Task(manager.generateId(), "Task2",
+                "Task2 description", StatusTask.IN_PROGRESS);
+        Epic epic1 = new Epic(manager.generateId(), "Epic1",
+                "Epic1 description");
+        int epicId1 = manager.createEpic(epic1);
+        SubTask subTask1 = new SubTask(manager.generateId(), "SubTask1",
+                "SubTask1 description", StatusTask.NEW, epicId1);
+        int subTaskId1 = manager.createSubTask(subTask1);
+        SubTask subTask2 = new SubTask(manager.generateId(), "SubTask2",
+                "SubTask2 description", StatusTask.IN_PROGRESS, epicId1);
+        SubTask subTask3 = new SubTask(manager.generateId(), "SubTask3",
+                "SubTask3 description", StatusTask.DONE, epicId1);
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(epic1);
+        historyManager.add(subTask1);
+        historyManager.add(subTask2);
+        historyManager.add(subTask3);
+
+        historyManager.getHistory().forEach(System.out::println);
+        System.out.println("------------------------------------");
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(subTask3);
+        historyManager.add(subTask2);
+        historyManager.add(subTask1);
+        historyManager.add(epic1);
+        historyManager.add(task2);
+        historyManager.add(task1);
+
+        historyManager.getHistory().forEach(System.out::println);
+        System.out.println("------------------------------------");
+        
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(epic1);
+        historyManager.add(subTask1);
+        historyManager.add(task1);
+        historyManager.add(subTask3);
+        historyManager.add(subTask2);
+
         historyManager.getHistory().forEach(System.out::println);
     }
 }
