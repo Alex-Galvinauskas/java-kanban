@@ -6,7 +6,7 @@ import managers.HistoryManager;
 import java.util.*;
 
 /**
- * @link HistoryManager хранит историю просмотров в оперативной памяти.
+ * HistoryManager хранит историю просмотров в оперативной памяти.
  * Использует двусвязный список для порядка и хэш-таблицу для быстрого доступа
  */
 
@@ -16,12 +16,13 @@ public class InMemoryHistoryManager implements HistoryManager {
      * Node класс, представляющий узел двусвязного списка.
      */
     private static class Node {
-        Task task;
+        final Task task;
         Node next;
         Node prev;
 
         /**
-         * Сздает новый узел
+         * Создает новый узел
+         *
          * @param task задача для хранения
          * @param prev предыдущий узел
          * @param next следующий узел
@@ -33,15 +34,20 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
     }
 
-    /** Хеш-таблица для быстрого доступа к узлам */
+    /**
+     * Хеш-таблица для быстрого доступа к узлам
+     */
     private final Map<Integer, Node> historyMap = new HashMap<>();
-    /** Первый узел */
+    /**
+     * Первый узел
+     */
     private Node head;
-    /** Последний узел */
+    /**
+     * Последний узел
+     */
     private Node tail;
 
     /**
-     * Возвращает историю просмотров
      * @return список задач от самого старого к самому новому
      */
     @Override
@@ -58,6 +64,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     /**
      * Добавляет задачу в историю.
      * Если задача есть в истории, то перемещает ее в конец.
+     *
      * @param task задача для добавления (не может быть null)
      */
     @Override
@@ -75,6 +82,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     /**
      * Удаляет задачу из истории
+     *
      * @param id идентификатор для удаления
      */
     @Override
@@ -88,6 +96,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     /**
      * Удаляет узел из истории
+     *
      * @param node узел для удаления (не может быть null)
      */
     private void removeNode(Node node) {
@@ -96,12 +105,30 @@ public class InMemoryHistoryManager implements HistoryManager {
             return;
         }
 
+        updatePrevNodeLinks(node);
+        updateNextNodeLinks(node);
+
+    }
+
+    /**
+     * Обновляет ссылки на предыдущий и следующий узлы
+     *
+     * @param node узел для обновления (не может быть null)
+     */
+    private void updatePrevNodeLinks(Node node) {
         if (node.prev != null) {
             node.prev.next = node.next;
         } else {
             head = node.next;
         }
+    }
 
+    /**
+     * Обновляет ссылки на предыдущий и следующий узлы
+     *
+     * @param node узел для обновления (не может быть null)
+     */
+    private void updateNextNodeLinks(Node node) {
         if (node.next != null) {
             node.next.prev = node.prev;
         } else {
@@ -111,6 +138,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     /**
      * Добавляет узел в конец списка
+     *
      * @param newNode узел для добавления (не может быть null)
      */
     private void linkLast(Node newNode) {
@@ -131,6 +159,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     /**
      * Очищает историю
      */
+    @Override
     public void clear() {
         historyMap.clear();
         head = null;
