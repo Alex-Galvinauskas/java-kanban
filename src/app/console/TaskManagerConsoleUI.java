@@ -8,17 +8,24 @@ import service.InMemoryTaskManager;
 import java.util.List;
 import java.util.Scanner;
 
-public class TaskManagerConsoleUI {
+public class TaskManagerConsoleUi {
     private final InMemoryTaskManager taskManager = Managers.getDefault();
     private final InMemoryHistoryManager historyManager = Managers.getDefaultHistory();
     private final Scanner scanner;
-    private boolean isRunning;
 
-    public TaskManagerConsoleUI(Scanner scanner, boolean isRunning) {
+    /**
+     * Флаг, указывающий, запущена ли программа
+     */
+    public boolean isRunning;
+
+    public TaskManagerConsoleUi(Scanner scanner, boolean isRunning) {
         this.scanner = scanner;
         this.isRunning = isRunning;
     }
 
+    /**
+     * Запускает консольный интерфейс
+     */
     public void start() {
         while (isRunning) {
             showMenu(
@@ -28,10 +35,14 @@ public class TaskManagerConsoleUI {
                             new MenuItem("Операции с эпиками", this::epicOperation),
                             new MenuItem("Операции с подзадачами", this::subTaskOperation),
                             new MenuItem("Просмотр всех задач", () -> System.out.println(taskManager.getAllTasks())),
-                            new MenuItem("Просмотр истории", () -> System.out.println(this.viewHistory()))
+                            new MenuItem("Просмотр истории", () -> System.out.println(this.viewHistory())),
+                            new MenuItem("Выход из программы", () -> {
+                                System.out.println("Спасибо за использование.");
+                                isRunning = false;
+                            }
 
-                    )
-                    );
+                            )
+                    ));
         }
     }
 
@@ -67,15 +78,15 @@ public class TaskManagerConsoleUI {
                             taskManager.updateTask(task);
                         }),
                         new MenuItem("Удалить задачу", () -> {
-                            int id = readIntInput("Введите ID задачи для удаления:");
-                            taskManager.deleteTaskById(id);
+                            int item = readIntInput("Введите ID задачи для удаления:");
+                            taskManager.deleteTaskById(item);
                         }),
                         new MenuItem("Просмотр всех задач", () ->
                                 System.out.println(taskManager.getAllTasks())),
 
                         new MenuItem("Найти задачу по ID", () -> {
-                            int id = readIntInput("Введите ID задачи:");
-                            System.out.println(taskManager.getTaskById(id));
+                            int item = readIntInput("Введите ID задачи:");
+                            System.out.println(taskManager.getTaskById(item));
                         })
                 )
         );
@@ -90,18 +101,18 @@ public class TaskManagerConsoleUI {
                             taskManager.createEpic(epic);
                         }),
                         new MenuItem("Удалить эпик", () -> {
-                            int id = readIntInput("Введите ID эпика для удаления:");
-                            taskManager.deleteEpicById(id);
+                            int item = readIntInput("Введите ID эпика для удаления:");
+                            taskManager.deleteEpicById(item);
                         }),
                         new MenuItem("Просмотр всех эпиков", () ->
                                 System.out.println(taskManager.getAllEpics())),
                         new MenuItem("Найти эпик по ID", () -> {
-                            int id = readIntInput("Введите ID эпика:");
-                            System.out.println(taskManager.getEpicById(id));
+                            int item = readIntInput("Введите ID эпика:");
+                            System.out.println(taskManager.getEpicById(item));
                         }),
                         new MenuItem("Просмотреть подзадачи эпика", () -> {
-                            int id = readIntInput("Введите ID эпика:");
-                            System.out.println(taskManager.getSubTasksByEpicId(id));
+                            int item = readIntInput("Введите ID эпика:");
+                            System.out.println(taskManager.getSubTasksByEpicId(item));
                         })
                 )
         );
@@ -121,33 +132,42 @@ public class TaskManagerConsoleUI {
                             taskManager.updateSubTask(subTask);
                         }),
                         new MenuItem("Удалить подзадачу", () -> {
-                            int id = readIntInput("Введите ID подзадачи для удаления:");
-                            taskManager.deleteSubTaskById(id);
+                            int item = readIntInput("Введите ID подзадачи для удаления:");
+                            taskManager.deleteSubTaskById(item);
                         }),
                         new MenuItem("Посмотреть все подзадачи", () ->
                                 System.out.println(taskManager.getAllSubTasks())),
                         new MenuItem("Найти подзадачу по ID", () -> {
-                            int id = readIntInput("Введите ID подзадачи:");
-                            System.out.println(taskManager.getSubTaskById(id));
+                            int item = readIntInput("Введите ID подзадачи:");
+                            System.out.println(taskManager.getSubTaskById(item));
                         })
                 )
         );
     }
 
+    /**
+     * Читает ввод пользователя
+     * @param number - сообщение для пользователя
+     * @return введенное число
+     */
     private int readIntInput(String number) {
         while (true) {
             System.out.println(number);
             try {
-                int id = Integer.parseInt(scanner.nextLine());
-                if (id >= 0)
-                    return id;
-                System.out.println("ID должен быть положительным числом.");
+                int item = Integer.parseInt(scanner.nextLine());
+                if (item >= 0)
+                    return item;
+                System.out.println("Пункт меню должен быть положительным числом.");
             } catch (NumberFormatException e) {
-                System.out.println("Неверный формат ID. Введите число.");
+                System.out.println("Неверный формат. Введите число.");
             }
         }
     }
 
+    /**
+     * Читает ввод пользователя
+     * @return введенное число
+     */
     private int readIntInput() {
         while (true) {
             try {
@@ -158,6 +178,10 @@ public class TaskManagerConsoleUI {
         }
     }
 
+    /**
+     * Читает ввод данных для создания задачи
+     * @return объект задачи
+     */
     private Task readTaskInput() {
         System.out.println("Введите название задачи:");
         String title = scanner.nextLine();
@@ -166,6 +190,10 @@ public class TaskManagerConsoleUI {
         return new Task(title, description);
     }
 
+    /**
+     * Читает ввод данных для создания эпика
+     * @return объект эпик
+     */
     private Epic readEpicInput() {
         System.out.println("Введите название эпика:");
         String title = scanner.nextLine();
@@ -174,6 +202,10 @@ public class TaskManagerConsoleUI {
         return new Epic(title, description);
     }
 
+    /**
+     * Читает ввод данных для создания подзадачи
+     * @return объект подзадачи
+     */
     private SubTask readSubTaskInput() {
         System.out.println("Введите название подзадачи:");
         String title = scanner.nextLine();
@@ -184,6 +216,10 @@ public class TaskManagerConsoleUI {
         return new SubTask(title, description, epicId);
     }
 
+    /**
+     * Выводит историю просмотров
+     * @return строку истории просмотров
+     */
     private String viewHistory() {
         return historyManager.getHistory().toString();
     }
