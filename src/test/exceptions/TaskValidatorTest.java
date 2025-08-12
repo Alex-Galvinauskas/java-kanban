@@ -1,8 +1,7 @@
 package test.exceptions;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import service.InMemoryTaskManager;
+import managers.Managers;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -16,19 +15,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
-import javax.xml.validation.Validator;
 
 
 class TaskValidatorTest {
     private TaskValidator validator;
     private Epic epic;
     private Task newTask;
-    InMemoryTaskManager taskManager = new InMemoryTaskManager();
+    private managers.TaskManager taskManager;
 
     @BeforeEach
     void setUp() {
         validator = new TaskValidator();
-        taskManager = new InMemoryTaskManager();
+        taskManager = Managers.getDefault();
     }
 
     @Test
