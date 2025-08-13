@@ -26,6 +26,7 @@ public class InMemoryTaskManagerTest {
     @Nested
     @DisplayName("Тесты менеджера задач")
     public class ManagersTest {
+
         @Test
         @DisplayName("getDefault() возвращает проинициализированный InMemoryTaskManager")
         void getDefault_shouldReturnInitializedInMemoryTaskManager() {
@@ -158,7 +159,7 @@ public class InMemoryTaskManagerTest {
         }
 
         @Test
-        @DisplayName("должно выбрасываться исключение, когда эпика не существует")
+        @DisplayName("Должно выбрасываться исключение, когда эпика не существует")
         void createSubTask_shouldThrowWhenEpicNotExist() {
 
             //подзадача с несуществующим эпиком
@@ -172,8 +173,8 @@ public class InMemoryTaskManagerTest {
     }
 
     @Nested
-    @DisplayName("Тесты метода getTaskById и getAllTasks")
-    class getTaskByIdAndGetAllTaskTest {
+    @DisplayName("Тесты методов получения задач, подзадач и эпиков")
+    class getTaskAndSubTaskAndEpicTest {
         private  Task task1;
         private  Task task2;
 
@@ -228,6 +229,32 @@ public class InMemoryTaskManagerTest {
             //проверяем, что задача не найдена(возвращен null)
             assertNull(taskManager.getTaskById(999));
         }
+
+        @Test
+        @DisplayName("Подзадача с несуществующим ID должна возвращаться null")
+        void getSubTaskById_shouldReturnNullWhenSubTaskNotFound() {
+            //используем несуществующий ID
+            int invalidId = 999;
+
+            //получаем подзадачу по несуществующему ID
+            taskManager.getSubTaskById(invalidId);
+
+            //проверяем, что подзадача не найдена(возвращен null)
+            assertNull(taskManager.getSubTaskById(999));
+        }
+
+        @Test
+        @DisplayName("Эпик с несуществующим ID должен возвращаться null")
+        void getEpicById_shouldReturnNullWhenEpicNotFound() {
+            // используем несуществующий ID
+            int invalidId = 999;
+
+            // получаем эпик по несуществующему ID
+            taskManager.getEpicById(invalidId);
+
+            // проверяем, что епик не найден(возвращен null)
+            assertNull(taskManager.getEpicById(999));
+        }
     }
 
     @Nested
@@ -250,7 +277,7 @@ public class InMemoryTaskManagerTest {
     }
 
     @Nested
-    @DisplayName("Тесты метода updateTask, updateEpic, updateSubTask")
+    @DisplayName("Тесты методов обновления задач, подзадач и эпиков")
     class UpdateTaskAndEpicAndSubtaskTest {
         private Task task;
         private int taskId;
@@ -359,10 +386,28 @@ public class InMemoryTaskManagerTest {
             //проверяем, что статус установлен IN_PROGRESS
             assertEquals(StatusTask.IN_PROGRESS, taskManager.getEpicById(epicId).getStatus());
         }
+
+        @Test
+        @DisplayName("Обновление подзадачи с несуществующим эпиком")
+        void updateSubTask_shouldThrowWhenEpicNotExist() {
+            //создаем подзадачу с несуществующим ID
+            subTaskNew = new SubTask(subTaskNew.getId(), "SubTask 1",
+                    "SubTask 1 description", StatusTask.NEW, epicId + 1);
+
+            assertThrows(IllegalArgumentException.class, ()
+                    -> taskManager.updateSubTask(subTaskNew));
+        }
+
+        @Test
+        @DisplayName("Обновление подзадачи с null выбросит исключение")
+        void updateSubTask_shouldThrowWhenSubTaskIsNull() {
+            assertThrows(IllegalArgumentException.class, ()
+                    -> taskManager.updateSubTask(null));
+        }
     }
 
     @Nested
-    @DisplayName("Тесты метода deleteTask, deleteEpic, deleteSubTask")
+    @DisplayName("Тесты методов удаления задач, подзадач и эпиков")
     class DeleteTaskAndEpicAndSubtaskTest {
         int taskId;
         int epicId;
@@ -474,6 +519,13 @@ public class InMemoryTaskManagerTest {
             //проверяем, что список задач и история просмотров очищена
             assertTrue(taskManager.getAllTasks().isEmpty());
             assertTrue(historyManager.getHistory().isEmpty());
+        }
+
+        @Test
+        @DisplayName("Удаление всех эпиков должно удалять все подзадачи")
+        void deleteAllEpics_shouldRemoveAllSubtasks() {
+            taskManager.deleteAllEpics();
+            assertTrue(taskManager.getAllSubTasks().isEmpty());
         }
     }
 
