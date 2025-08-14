@@ -58,13 +58,13 @@ public class TaskValidator {
     /**
      * Проверяет подзадачу перед обновлением
      * @param subTask для проверки
-     * @param SubTasks карта подзадач для проверки существования подзадачи
+     * @param subTasks карта подзадач для проверки существования подзадачи
      * @param epics карта эпиков для проверки существования родительского эпика
      */
-    public void validateSubTaskForUpdate(SubTask subTask, Map<Integer, SubTask> SubTasks, Map<Integer, Epic> epics) {
+    public void validateSubTaskForUpdate(SubTask subTask, Map<Integer, SubTask> subTasks, Map<Integer, Epic> epics) {
         validateNotNull(subTask, "SubTask ");
         validatePositiveId(subTask.getId());
-        validateIdExist(SubTasks, subTask.getId());
+        validateIdExist(subTasks, subTask.getId());
         validateEpicExist(epics, subTask.getEpicId());
     }
 
