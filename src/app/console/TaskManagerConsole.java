@@ -8,7 +8,7 @@ import service.InMemoryTaskManager;
 import java.util.List;
 import java.util.Scanner;
 
-public class TaskManagerConsoleUi {
+public class TaskManagerConsole {
     private final InMemoryTaskManager taskManager = Managers.getDefault();
     private final InMemoryHistoryManager historyManager = Managers.getDefaultHistory();
     private final Scanner scanner;
@@ -18,7 +18,7 @@ public class TaskManagerConsoleUi {
      */
     public boolean isRunning;
 
-    public TaskManagerConsoleUi(Scanner scanner, boolean isRunning) {
+    public TaskManagerConsole(Scanner scanner, boolean isRunning) {
         this.scanner = scanner;
         this.isRunning = isRunning;
     }

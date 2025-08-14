@@ -13,7 +13,7 @@ public class Main {
     public static void main(String[] args) {
         InMemoryTaskManager manager = new InMemoryTaskManager();
         InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
-        TaskManagerConsoleUi consoleUI = new TaskManagerConsoleUi(
+        TaskManagerConsole consoleUI = new TaskManagerConsole(
                 new java.util.Scanner(System.in), true);
 
         /*consoleUI.start();*/
