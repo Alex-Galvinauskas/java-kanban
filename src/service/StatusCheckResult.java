@@ -6,10 +6,27 @@ class StatusCheckResult {
     private boolean hasInProgress = false;
 
     // Геттеры и сеттеры
-    public boolean isAllNew() { return allNew; }
-    public void setAllNew(boolean allNew) { this.allNew = allNew; }
-    public boolean isAllDone() { return allDone; }
-    public void setAllDone(boolean allDone) { this.allDone = allDone; }
-    public boolean isHasInProgress() { return hasInProgress; }
-    public void setHasInProgress(boolean hasInProgress) { this.hasInProgress = hasInProgress; }
+    public boolean isAllNew() {
+        return allNew;
+    }
+
+    public void setAllNew(boolean allNew) {
+        this.allNew = allNew;
+    }
+
+    public boolean isAllDone() {
+        return allDone;
+    }
+
+    public void setAllDone(boolean allDone) {
+        this.allDone = allDone;
+    }
+
+    public boolean isHasInProgress() {
+        return hasInProgress;
+    }
+
+    public void setHasInProgress(boolean hasInProgress) {
+        this.hasInProgress = hasInProgress;
+    }
 }
