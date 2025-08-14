@@ -36,8 +36,12 @@ public class TaskManagerConsole {
                             new MenuItem("Операции с задачами", this::taskOperation),
                             new MenuItem("Операции с эпиками", this::epicOperation),
                             new MenuItem("Операции с подзадачами", this::subTaskOperation),
-                            new MenuItem("Просмотр всех задач", () -> System.out.println(taskManager.getAllTasks())),
-                            new MenuItem("Просмотр истории", () -> System.out.println(this.viewHistory())),
+                            new MenuItem("Просмотр всех задач", () -> {
+                                System.out.println(taskManager.getAllTasks());
+                            }),
+                            new MenuItem("Просмотр истории", () -> {
+                                System.out.println(this.viewHistory());
+                            }),
                             new MenuItem("Выход из программы", () -> {
                                 System.out.println("Спасибо за использование.");
                                 isRunning = false;
@@ -54,11 +58,15 @@ public class TaskManagerConsole {
         for (int i = 0; i < items.size(); i++) {
             System.out.printf("%d. %s%n", i + 1, items.get(i).getTitle());
         }
-        System.out.println("0 " + (title.equals("ГЛАВНОЕ МЕНЮ") ? "Выход из программы" : "Вернуться в главное меню"));
+        System.out.println("0 " + (title.equals("ГЛАВНОЕ МЕНЮ")
+                ? "Выход из программы"
+                : "Вернуться в главное меню"));
         System.out.println("Выберите пункт меню:");
 
         int choice = readIntInput();
-        if (choice == 0) return;
+        if (choice == 0) {
+            return;
+        }
 
         if (choice > 0 && choice <= items.size()) {
             items.get(choice - 1).getAction().run();
@@ -66,6 +74,7 @@ public class TaskManagerConsole {
             System.out.println("Неизвестная команда. Попробуйте еще раз.");
         }
     }
+
 
     private void taskOperation() {
         showMenu(
@@ -159,8 +168,9 @@ public class TaskManagerConsole {
             System.out.println(number);
             try {
                 int item = Integer.parseInt(scanner.nextLine());
-                if (item >= 0)
+                if (item >= 0) {
                     return item;
+                }
                 System.out.println("Пункт меню должен быть положительным числом.");
             } catch (NumberFormatException e) {
                 System.out.println("Неверный формат. Введите число.");
@@ -201,6 +211,7 @@ public class TaskManagerConsole {
      *
      * @return объект эпик
      */
+
     public Epic readEpicInput() {
         System.out.println("Введите название эпика:");
         String title = scanner.nextLine();
