@@ -52,7 +52,7 @@ public class InMemoryTaskManagerTest {
 
     @Nested
     @DisplayName("Тесты генерации ID")
-    class generatedIdTest {
+    class GeneratedIdTest {
 
         @Test
         @DisplayName("Генерация ID: должен генерироваться уникальный ID")
@@ -71,7 +71,7 @@ public class InMemoryTaskManagerTest {
 
     @Nested
     @DisplayName("Тесты создания задач")
-    class createTaskTest {
+    class CreateTaskTest {
         private Epic epic;
         private int epicId;
 
@@ -174,7 +174,7 @@ public class InMemoryTaskManagerTest {
 
     @Nested
     @DisplayName("Тесты методов получения задач, подзадач и эпиков")
-    class getTaskAndSubTaskAndEpicTest {
+    class GetTaskAndSubTaskAndEpicTest {
         private  Task task1;
         private  Task task2;
 
@@ -259,7 +259,7 @@ public class InMemoryTaskManagerTest {
 
     @Nested
     @DisplayName("Тесты метода getSubTasksByEpicId")
-    class getSubTasksByEpicIdTest {
+    class GetSubTasksByEpicIdTest {
         @Test
         @DisplayName("должен возвращаться пустой список, если подзадач нет")
         void getSubTasksByEpicId_shouldReturnEmptyListWhenSubtasks() {
