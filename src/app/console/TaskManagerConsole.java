@@ -1,6 +1,8 @@
 package app.console;
 
-import core.*;
+import core.Epic;
+import core.SubTask;
+import core.Task;
 import managers.Managers;
 import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;
@@ -147,7 +149,9 @@ public class TaskManagerConsole {
 
     /**
      * Читает ввод пользователя
+     *
      * @param number - сообщение для пользователя
+     *
      * @return введенное число
      */
     private int readIntInput(String number) {
@@ -166,6 +170,7 @@ public class TaskManagerConsole {
 
     /**
      * Читает ввод пользователя
+     *
      * @return введенное число
      */
     public int readIntInput() {
@@ -180,6 +185,7 @@ public class TaskManagerConsole {
 
     /**
      * Читает ввод данных для создания задачи
+     *
      * @return объект задачи
      */
     public Task readTaskInput() {
@@ -192,6 +198,7 @@ public class TaskManagerConsole {
 
     /**
      * Читает ввод данных для создания эпика
+     *
      * @return объект эпик
      */
     public Epic readEpicInput() {
@@ -204,6 +211,7 @@ public class TaskManagerConsole {
 
     /**
      * Читает ввод данных для создания подзадачи
+     *
      * @return объект подзадачи
      */
     public SubTask readSubTaskInput() {
@@ -218,6 +226,7 @@ public class TaskManagerConsole {
 
     /**
      * Выводит историю просмотров
+     *
      * @return строку истории просмотров
      */
     private String viewHistory() {
