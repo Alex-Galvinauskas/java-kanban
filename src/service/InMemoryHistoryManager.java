@@ -107,7 +107,6 @@ public class InMemoryHistoryManager implements HistoryManager {
 
         updatePrevNodeLinks(node);
         updateNextNodeLinks(node);
-
     }
 
     /**

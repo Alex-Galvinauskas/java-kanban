@@ -11,7 +11,7 @@ import managers.TaskManager;
 import java.util.*;
 
 /**
- * @link TaskManager
+ * TaskManager
  * Управляет задачами, эпиками и подзадачами, поддерживает историю просмотров.
  */
 public class InMemoryTaskManager implements TaskManager {
@@ -66,9 +66,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (subTask.getId() == 0) {
             subTask.setId(generateId());
         }
-        if (subTask == null) {
-            throw new IllegalArgumentException("Подзадача не может быть null");
-        }
+
         if (subTask.getId() == subTask.getEpicId()) {
             throw new IllegalArgumentException("Подзадача не может быть своим же эпиком");
         }

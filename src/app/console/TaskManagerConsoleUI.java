@@ -47,7 +47,7 @@ public class TaskManagerConsoleUi {
     }
 
 
-    private void showMenu(String title, List<MenuItem> items) {
+    public void showMenu(String title, List<MenuItem> items) {
         System.out.println("\n=== " + title + " ===");
         for (int i = 0; i < items.size(); i++) {
             System.out.printf("%d. %s%n", i + 1, items.get(i).getTitle());
@@ -168,7 +168,7 @@ public class TaskManagerConsoleUi {
      * Читает ввод пользователя
      * @return введенное число
      */
-    private int readIntInput() {
+    public int readIntInput() {
         while (true) {
             try {
                 return Integer.parseInt(scanner.nextLine());
@@ -182,7 +182,7 @@ public class TaskManagerConsoleUi {
      * Читает ввод данных для создания задачи
      * @return объект задачи
      */
-    private Task readTaskInput() {
+    public Task readTaskInput() {
         System.out.println("Введите название задачи:");
         String title = scanner.nextLine();
         System.out.println("Введите описание задачи:");
@@ -194,7 +194,7 @@ public class TaskManagerConsoleUi {
      * Читает ввод данных для создания эпика
      * @return объект эпик
      */
-    private Epic readEpicInput() {
+    public Epic readEpicInput() {
         System.out.println("Введите название эпика:");
         String title = scanner.nextLine();
         System.out.println("Введите описание эпика:");
@@ -206,7 +206,7 @@ public class TaskManagerConsoleUi {
      * Читает ввод данных для создания подзадачи
      * @return объект подзадачи
      */
-    private SubTask readSubTaskInput() {
+    public SubTask readSubTaskInput() {
         System.out.println("Введите название подзадачи:");
         String title = scanner.nextLine();
         System.out.println("Введите описание подзадачи:");

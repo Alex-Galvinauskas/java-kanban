@@ -162,7 +162,7 @@ public class Main {
 
         historyManager.getHistory().forEach(System.out::println);
         System.out.println("------------------------------------");
-        
+
         historyManager.add(task1);
         historyManager.add(task2);
         historyManager.add(epic1);
