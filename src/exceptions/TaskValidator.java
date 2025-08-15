@@ -52,7 +52,6 @@ public class TaskValidator {
     public void validateTaskForUpdate(Task task, Map<Integer, Task> tasks) {
        validateNotNull(task, "Задача ");
        validateIdExist(tasks, task.getId());
-       validateIdExist(tasks, task.getId());
     }
 
     /**
