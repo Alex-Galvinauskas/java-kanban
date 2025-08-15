@@ -6,8 +6,8 @@ import core.Task;
 import managers.Managers;
 import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;
-
 import java.util.List;
+
 import java.util.Scanner;
 
 public class TaskManagerConsole {
@@ -56,7 +56,7 @@ public class TaskManagerConsole {
     public void showMenu(String title, List<MenuItem> items) {
         System.out.println("\n=== " + title + " ===");
         for (int i = 0; i < items.size(); i++) {
-            System.out.printf("%d. %s%n", i + 1, items.get(i).getTitle());
+            System.out.printf("%d. %s%n", i + 1, items.get(i).title());
         }
         System.out.println("0 " + (title.equals("ГЛАВНОЕ МЕНЮ")
                 ? "Выход из программы"
@@ -69,7 +69,7 @@ public class TaskManagerConsole {
         }
 
         if (choice > 0 && choice <= items.size()) {
-            items.get(choice - 1).getAction().run();
+            items.get(choice - 1).action().run();
         } else {
             System.out.println("Неизвестная команда. Попробуйте еще раз.");
         }
