@@ -4,6 +4,7 @@ import core.Epic;
 import core.SubTask;
 import core.Task;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface TaskManager {
@@ -26,6 +27,8 @@ public interface TaskManager {
     List<SubTask> getAllSubTasks();
 
     SubTask getSubTaskById(int id);
+
+    Collection<Task> getHistory();
 
     void updateTask(Task task);
 

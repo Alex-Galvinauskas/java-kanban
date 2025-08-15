@@ -1,0 +1,5 @@
+./test/app/console/TaskManagerConsoleTest.java
+./test/exceptions/TaskValidatorTest.java
+./test/managers/ManagersTest.java
+./test/service/InMemoryHistoryManagerTest.java
+./test/service/InMemoryTaskManagerTest.java
