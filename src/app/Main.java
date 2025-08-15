@@ -8,13 +8,15 @@ import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;
 import app.console.*;
 
+import java.util.Scanner;
+
 public class Main {
 
     public static void main(String[] args) {
         InMemoryTaskManager manager = new InMemoryTaskManager();
         InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
         TaskManagerConsole consoleUI = new TaskManagerConsole(
-                new java.util.Scanner(System.in), true);
+                new Scanner(System.in), true);
 
         /*consoleUI.start();*/
 
