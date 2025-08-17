@@ -139,16 +139,16 @@ public class TaskValidator {
      * @return true, если задачи одинаковые, иначе false
      */
     public boolean isSameTask(Task task1, Task task2) {
-        if (task1 == task2) {
+        if (task1 == task2) { //если один и тот же объект
             return true;
         }
 
-        if (task1 == null || task2 == null) {
+        if (task1 == null || task2 == null) { //если один из объектов null
             return false;
         }
 
         return Objects.equals(task1.getId(), task2.getId())
-                && Objects.equals(task1.getName(), task2.getName());
+                && Objects.equals(task1.getName(), task2.getName()); //если имена и id одинаковые
     }
 }
 
