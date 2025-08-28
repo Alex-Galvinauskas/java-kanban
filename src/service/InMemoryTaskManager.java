@@ -7,7 +7,6 @@ import core.Task;
 import exceptions.TaskValidator;
 import contracts.TaskManager;
 
-
 import java.io.IOException;
 import java.util.*;
 
@@ -23,7 +22,6 @@ public class InMemoryTaskManager implements TaskManager {
     private final InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
     private final TaskValidator validator = new TaskValidator();
     private int nextId = 1;
-
 
     /**
      * Восстанавливает задачу напрямую в карту задач.
@@ -235,7 +233,9 @@ public class InMemoryTaskManager implements TaskManager {
      */
     private void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId);
-        if (epic == null) return;
+        if (epic == null) {
+            return;
+        }
 
         List<Integer> subtaskIds = epic.getSubTaskIds();
         if (subtaskIds.isEmpty()) {
@@ -389,7 +389,9 @@ public class InMemoryTaskManager implements TaskManager {
 
         for (int subtaskId : subtaskIds) {
             SubTask subTask = subTasks.get(subtaskId);
-            if (subTask == null) continue;
+            if (subTask == null) {
+                continue;
+            }
 
             StatusTask status = subTask.getStatus();
             if (status == StatusTask.IN_PROGRESS) {
@@ -420,25 +422,36 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    protected void afterTaskCreation(Task task) {}
+    protected void afterTaskCreation(Task task) {
+    }
 
-    protected void afterEpicCreation(Epic epic) {}
+    protected void afterEpicCreation(Epic epic) {
+    }
 
-    protected void afterSubTaskCreation(SubTask subTask) {}
+    protected void afterSubTaskCreation(SubTask subTask) {
+    }
 
-    protected void afterTaskUpdate(Task task) {}
+    protected void afterTaskUpdate(Task task) {
+    }
 
-    protected void afterSubTaskUpdate(SubTask subTask) {}
+    protected void afterSubTaskUpdate(SubTask subTask) {
+    }
 
-    protected void afterTaskDeletion(int taskId) {}
+    protected void afterTaskDeletion(int taskId) {
+    }
 
-    protected void afterEpicDeletion(int epicId) {}
+    protected void afterEpicDeletion(int epicId) {
+    }
 
-    protected void afterSubTaskDeletion(int subTaskId) {}
+    protected void afterSubTaskDeletion(int subTaskId) {
+    }
 
-    protected void afterAllTasksDeletion() {}
+    protected void afterAllTasksDeletion() {
+    }
 
-    protected void afterAllEpicsDeletion() {}
+    protected void afterAllEpicsDeletion() {
+    }
 
-    protected void afterAllSubTasksDeletion() {}
+    protected void afterAllSubTasksDeletion() {
+    }
 }
