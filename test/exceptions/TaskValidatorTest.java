@@ -1,5 +1,6 @@
 package test.exceptions;
 
+import contracts.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import managers.Managers;
 
@@ -21,7 +22,7 @@ class TaskValidatorTest {
     private TaskValidator validator;
     private Epic epic;
     private Task newTask;
-    private managers.TaskManager taskManager;
+    private TaskManager taskManager;
 
     @BeforeEach
     void setUp() {

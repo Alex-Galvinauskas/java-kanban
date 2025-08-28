@@ -5,9 +5,10 @@ import core.StatusTask;
 import core.SubTask;
 import core.Task;
 import exceptions.TaskValidator;
-import managers.TaskManager;
+import contracts.TaskManager;
 
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -15,12 +16,45 @@ import java.util.*;
  * Управляет задачами, эпиками и подзадачами, поддерживает историю просмотров.
  */
 public class InMemoryTaskManager implements TaskManager {
-    private final Map<Integer, Task> tasks = new HashMap<>();
-    private final Map<Integer, Epic> epics = new HashMap<>();
-    private final Map<Integer, SubTask> subTasks = new HashMap<>();
+
+    protected final Map<Integer, Task> tasks = new HashMap<>();
+    protected final Map<Integer, Epic> epics = new HashMap<>();
+    protected final Map<Integer, SubTask> subTasks = new HashMap<>();
     private final InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
     private final TaskValidator validator = new TaskValidator();
     private int nextId = 1;
+
+
+    /**
+     * Восстанавливает задачу напрямую в карту задач.
+     * Используется для восстановления состояния менеджера.
+     * @param task задача для восстановления
+     */
+    protected void restoreTaskDirectly(Task task) {
+        tasks.put(task.getId(), task);
+    }
+
+    /**
+     * Восстанавливает эпик напрямую в карту эпиков.
+     * Используется для восстановления состояния менеджера.
+     * @param epic эпик для восстановления
+     */
+    protected void restoreEpicDirectly(Epic epic) {
+        epics.put(epic.getId(), epic);
+    }
+
+    /**
+     * Восстанавливает эпик напрямую в карту эпиков.
+     * Используется для восстановления состояния менеджера.
+     * @param subTask подзадача для восстановления
+     */
+    protected void restoreSubTaskDirectly(SubTask subTask) {
+        subTasks.put(subTask.getId(), subTask);
+        Epic epic = epics.get(subTask.getEpicId());
+        if (epic != null) {
+            epic.addSubTaskId(subTask.getId());
+        }
+    }
 
     /**
      * Создает задачу
@@ -29,13 +63,14 @@ public class InMemoryTaskManager implements TaskManager {
      * @throws IllegalArgumentException если задача не прошла валидацию
      */
     @Override
-    public int createTask(Task task) {
+    public int createTask(Task task) throws IOException {
         validator.validateNotNull(task, "Задача");
         if (task.getId() == 0) {
             task.setId(generateId());
         }
         validator.validateTaskForCreation(task, tasks.values());
         tasks.put(task.getId(), task);
+        afterTaskCreation(task);
         return task.getId();
     }
 
@@ -46,12 +81,13 @@ public class InMemoryTaskManager implements TaskManager {
      * @throws IllegalArgumentException если эпик не прошел валидацию
      */
     @Override
-    public int createEpic(Epic epic) {
+    public int createEpic(Epic epic) throws IOException {
         if (epic.getId() == 0) {
             epic.setId(generateId());
         }
         validator.validateForEpicCreation(epic);
         epics.put(epic.getId(), epic);
+        afterEpicCreation(epic);
         return epic.getId();
     }
 
@@ -62,7 +98,7 @@ public class InMemoryTaskManager implements TaskManager {
      * @throws IllegalArgumentException если подзадача не прошла валидацию
      */
     @Override
-    public int createSubTask(SubTask subTask) {
+    public int createSubTask(SubTask subTask) throws IOException {
         if (subTask.getId() == 0) {
             subTask.setId(generateId());
         }
@@ -78,6 +114,7 @@ public class InMemoryTaskManager implements TaskManager {
         epic.addSubTaskId(subTask.getId());
         updateEpicStatus(subTask.getEpicId());
 
+        afterSubTaskCreation(subTask);
         return subTask.getId();
     }
 
@@ -186,9 +223,10 @@ public class InMemoryTaskManager implements TaskManager {
      * @throws IllegalArgumentException если задача не прошла валидацию
      */
     @Override
-    public void updateTask(Task task) {
+    public void updateTask(Task task) throws IOException {
         validator.validateTaskForUpdate(task, tasks);
         tasks.put(task.getId(), new Task(task));
+        afterTaskUpdate(task);
     }
 
     /**
@@ -215,10 +253,11 @@ public class InMemoryTaskManager implements TaskManager {
      * @throws IllegalArgumentException если подзадача не прошла валидацию
      */
     @Override
-    public void updateSubTask(SubTask subTask) {
+    public void updateSubTask(SubTask subTask) throws IOException {
         validator.validateSubTaskForUpdate(subTask, subTasks, epics);
         subTasks.put(subTask.getId(), subTask);
         updateEpicStatus(subTask.getEpicId());
+        afterSubTaskUpdate(subTask);
     }
 
     /**
@@ -226,12 +265,13 @@ public class InMemoryTaskManager implements TaskManager {
      * Очищает историю.
      */
     @Override
-    public void deleteAllTasks() {
+    public void deleteAllTasks() throws IOException {
         Set<Integer> taskIds = new HashSet<>(tasks.keySet());
         tasks.clear();
         for (Integer id : taskIds) {
             historyManager.remove(id);
         }
+        afterAllTasksDeletion();
     }
 
     /**
@@ -239,10 +279,11 @@ public class InMemoryTaskManager implements TaskManager {
      * @param id задачи
      */
     @Override
-    public void deleteTaskById(int id) {
+    public void deleteTaskById(int id) throws IOException {
         validator.validatePositiveId(id);
         tasks.remove(id);
         historyManager.remove(id);
+        afterTaskDeletion(id);
     }
 
     /**
@@ -250,13 +291,14 @@ public class InMemoryTaskManager implements TaskManager {
      * Очищает историю для эпиков и подзадач
      */
     @Override
-    public void deleteAllEpics() {
+    public void deleteAllEpics() throws IOException {
         Set<Integer> epicIds = new HashSet<>(epics.keySet());
         epics.clear();
         for (Integer id : epicIds) {
             historyManager.remove(id);
             deleteAllSubTasks();
         }
+        afterAllEpicsDeletion();
     }
 
     /**
@@ -264,7 +306,7 @@ public class InMemoryTaskManager implements TaskManager {
      * @param id эпика
      */
     @Override
-    public void deleteEpicById(int id) {
+    public void deleteEpicById(int id) throws IOException {
         validator.validatePositiveId(id);
         Epic epic = epics.get(id);
         validator.validateEpicExist(epics, id);
@@ -275,6 +317,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         historyManager.remove(id);
         epics.remove(id);
+        afterEpicDeletion(id);
     }
 
     /**
@@ -282,7 +325,7 @@ public class InMemoryTaskManager implements TaskManager {
      * Обновляет статусы эпиков и очищает историю
      */
     @Override
-    public void deleteAllSubTasks() {
+    public void deleteAllSubTasks() throws IOException {
         Set<Integer> subTaskIds = new HashSet<>(subTasks.keySet());
 
         subTasks.clear();
@@ -295,6 +338,7 @@ public class InMemoryTaskManager implements TaskManager {
             epic.clearSubTaskIds();
             updateEpicStatus(epic.getId());
         }
+        afterAllSubTasksDeletion();
     }
 
     /**
@@ -302,7 +346,7 @@ public class InMemoryTaskManager implements TaskManager {
      * @param id подзадачи
      */
     @Override
-    public void deleteSubTaskById(int id) {
+    public void deleteSubTaskById(int id) throws IOException {
         validator.validatePositiveId(id);
         SubTask subTask = subTasks.get(id);
         if (subTask != null) {
@@ -314,6 +358,7 @@ public class InMemoryTaskManager implements TaskManager {
                 updateEpicStatus(epic.getId());
             }
             historyManager.remove(id);
+            afterSubTaskDeletion(id);
         }
     }
 
@@ -374,4 +419,26 @@ public class InMemoryTaskManager implements TaskManager {
             setEpicStatus(epic, StatusTask.IN_PROGRESS);
         }
     }
+
+    protected void afterTaskCreation(Task task) {}
+
+    protected void afterEpicCreation(Epic epic) {}
+
+    protected void afterSubTaskCreation(SubTask subTask) {}
+
+    protected void afterTaskUpdate(Task task) {}
+
+    protected void afterSubTaskUpdate(SubTask subTask) {}
+
+    protected void afterTaskDeletion(int taskId) {}
+
+    protected void afterEpicDeletion(int epicId) {}
+
+    protected void afterSubTaskDeletion(int subTaskId) {}
+
+    protected void afterAllTasksDeletion() {}
+
+    protected void afterAllEpicsDeletion() {}
+
+    protected void afterAllSubTasksDeletion() {}
 }

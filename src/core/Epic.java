@@ -43,6 +43,10 @@ public final class Epic extends Task {
         }
     }
 
+    public TaskType getType() {
+        return TaskType.EPIC;
+    }
+
     public void removeSubTaskId(int subTaskId) {
         validator.validatePositiveId(subTaskId);
         subTaskIds.remove(Integer.valueOf(subTaskId));

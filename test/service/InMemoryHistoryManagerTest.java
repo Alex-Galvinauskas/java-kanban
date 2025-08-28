@@ -2,13 +2,14 @@ package test.service;
 
 import core.StatusTask;
 import core.Task;
-import managers.HistoryManager;
+import contracts.HistoryManager;
 import managers.Managers;
-import managers.TaskManager;
+import contracts.TaskManager;
 import org.junit.jupiter.api.*;
 import service.InMemoryHistoryManager;
 
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -171,7 +172,7 @@ class InMemoryHistoryManagerTest {
 
     @Test
     @DisplayName("Проверка, что HistoryManager сохраняет задачу при вызове метода getTaskById")
-    public void testHistoryManagerIsUsed() {
+    public void testHistoryManagerIsUsed() throws IOException {
 
         //создаем задачу в менеджере
         taskManager.createTask(task1);

@@ -8,11 +8,12 @@ import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;
 import app.console.*;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         InMemoryTaskManager manager = new InMemoryTaskManager();
         InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
         TaskManagerConsole consoleUI = new TaskManagerConsole(
@@ -125,7 +126,7 @@ public class Main {
 
         System.out.println("История просмотра: ");
         historyManager.getHistory().forEach(System.out::println);
-        */
+
 
         //тест пользовательского сценария
         Task task1 = new Task(manager.generateId(), "Task1",
@@ -174,7 +175,26 @@ public class Main {
         historyManager.add(subTask2);
 
         historyManager.getHistory().forEach(System.out::println);
+    }*/
+
+        Epic epic = new Epic(manager.generateId(), "Epic 1", "Epic 1 description");
+        int epicId = manager.createEpic(epic);
+        SubTask subTask = new SubTask(manager.generateId(), "SubTask 1",
+                "SubTask 1 description", StatusTask.NEW, epicId);
+        int subTaskId = manager.createSubTask(subTask);
+        SubTask subTask1 = new SubTask(manager.generateId(), "SubTask 2",
+                "SubTask 2 description", StatusTask.IN_PROGRESS, epicId);
+        int subTaskId1 = manager.createSubTask(subTask1);
+        SubTask subTask2 = new SubTask(manager.generateId(), "SubTask 3",
+                "SubTask 3 description", StatusTask.DONE, epicId);
+        int subTaskId2 = manager.createSubTask(subTask2);
+
+        Task task = new Task(manager.generateId(), "Task 1", "Task 1 description", StatusTask.NEW);
+        int taskId = manager.createTask(task);
+        Task task1 = new Task(manager.generateId(), "Task 2", "Task 2 description", StatusTask.IN_PROGRESS);
+        int taskId1 = manager.createTask(task1);
+        Task task2 = new Task(manager.generateId(), "Task 3", "Task 3 description", StatusTask.DONE);
+        int taskId2 = manager.createTask(task2);
     }
 }
-
 

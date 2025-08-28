@@ -6,6 +6,8 @@ import core.Task;
 import managers.Managers;
 import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;
+
+import java.io.IOException;
 import java.util.List;
 
 import java.util.Scanner;
@@ -82,15 +84,27 @@ public class TaskManagerConsole {
                 List.of(
                         new MenuItem("Создать задачу", () -> {
                             Task task = readTaskInput();
-                            taskManager.createTask(task);
+                            try {
+                                taskManager.createTask(task);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }),
                         new MenuItem("Обновить задачу", () -> {
                             Task task = readTaskInput();
-                            taskManager.updateTask(task);
+                            try {
+                                taskManager.updateTask(task);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }),
                         new MenuItem("Удалить задачу", () -> {
                             int item = readIntInput("Введите ID задачи для удаления:");
-                            taskManager.deleteTaskById(item);
+                            try {
+                                taskManager.deleteTaskById(item);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }),
                         new MenuItem("Просмотр всех задач", () ->
                                 System.out.println(taskManager.getAllTasks())),
@@ -109,11 +123,19 @@ public class TaskManagerConsole {
                 List.of(
                         new MenuItem("Создать эпик", () -> {
                             Epic epic = readEpicInput();
-                            taskManager.createEpic(epic);
+                            try {
+                                taskManager.createEpic(epic);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }),
                         new MenuItem("Удалить эпик", () -> {
                             int item = readIntInput("Введите ID эпика для удаления:");
-                            taskManager.deleteEpicById(item);
+                            try {
+                                taskManager.deleteEpicById(item);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }),
                         new MenuItem("Просмотр всех эпиков", () ->
                                 System.out.println(taskManager.getAllEpics())),
@@ -136,15 +158,27 @@ public class TaskManagerConsole {
                 List.of(
                         new MenuItem("Создать подзадачу", () -> {
                             SubTask subTask = readSubTaskInput();
-                            taskManager.createSubTask(subTask);
+                            try {
+                                taskManager.createSubTask(subTask);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }),
                         new MenuItem("Обновить подзадачу", () -> {
                             SubTask subTask = readSubTaskInput();
-                            taskManager.updateSubTask(subTask);
+                            try {
+                                taskManager.updateSubTask(subTask);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }),
                         new MenuItem("Удалить подзадачу", () -> {
                             int item = readIntInput("Введите ID подзадачи для удаления:");
-                            taskManager.deleteSubTaskById(item);
+                            try {
+                                taskManager.deleteSubTaskById(item);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         }),
                         new MenuItem("Посмотреть все подзадачи", () ->
                                 System.out.println(taskManager.getAllSubTasks())),

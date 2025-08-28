@@ -1,7 +1,7 @@
 package service;
 
 import core.Task;
-import managers.HistoryManager;
+import contracts.HistoryManager;
 
 import java.util.*;
 

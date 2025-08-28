@@ -7,6 +7,7 @@ import managers.Managers;
 
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -76,7 +77,7 @@ public class InMemoryTaskManagerTest {
         private int epicId;
 
         @BeforeEach
-        void setUpCreateTaskTest() {
+        void setUpCreateTaskTest() throws IOException {
             //создаем эпик
             epic = new Epic(taskManager.generateId(), "Epic 1", "Epic 1 description");
             epicId = taskManager.createEpic(epic);
@@ -84,7 +85,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Создание задачи: должна создаваться и возвращаться задача с ID")
-        void createTask_shouldCreateAndReturnTaskWithId() {
+        void createTask_shouldCreateAndReturnTaskWithId() throws IOException {
 
             //создаем менеджер задач и новую задачу
             taskManager = new InMemoryTaskManager();
@@ -130,7 +131,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Создание подзадачи: должна создаваться и возвращаться подзадача с ID")
-        void createSubTask_shouldCreateAndReturnsSubtaskWitchId() {
+        void createSubTask_shouldCreateAndReturnsSubtaskWitchId() throws IOException {
 
             //эпик и подзадача для него
             SubTask subTask = new SubTask(taskManager.generateId(), "Подзадача 1",
@@ -179,7 +180,7 @@ public class InMemoryTaskManagerTest {
         private  Task task2;
 
         @BeforeEach
-        void setUpGetTaskTest() {
+        void setUpGetTaskTest() throws IOException {
             task1 = new Task(taskManager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
             task2 = new Task(taskManager.generateId(), "Task 2",
@@ -191,7 +192,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("должен возвращаться пустой список, если задач нет")
-        void getAllTasks_shouldReturnEmptyListWhenNoTasks() {
+        void getAllTasks_shouldReturnEmptyListWhenNoTasks() throws IOException {
 
             //удаляем все задачи
             taskManager.deleteAllTasks();
@@ -262,7 +263,7 @@ public class InMemoryTaskManagerTest {
     class GetSubTasksByEpicIdTest {
         @Test
         @DisplayName("должен возвращаться пустой список, если подзадач нет")
-        void getSubTasksByEpicId_shouldReturnEmptyListWhenSubtasks() {
+        void getSubTasksByEpicId_shouldReturnEmptyListWhenSubtasks() throws IOException {
 
             //эпик без подзадач
             Epic epic = new Epic(taskManager.generateId(), "Epic 1", "Epic 1 description");
@@ -287,7 +288,7 @@ public class InMemoryTaskManagerTest {
         private SubTask subTaskDone;
 
         @BeforeEach
-        void setUpdateTest() {
+        void setUpdateTest() throws IOException {
 
             task = new Task(taskManager.generateId(), "Task 1", "Task 1 description", StatusTask.NEW);
             taskId = taskManager.createTask(task);
@@ -305,7 +306,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("должна обновляться существующая задача")
-        void updateTask_shouldUpdateExistingTask() {
+        void updateTask_shouldUpdateExistingTask() throws IOException {
 
             //обновляем задачу
             Task updatedTask = new Task(task.getId(), "Updated Task 1",
@@ -338,7 +339,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Статус эпика NEW, если все подзадачи NEW")
-        void epicStatusShouldBeNewWhenAllSubtasksNew() {
+        void epicStatusShouldBeNewWhenAllSubtasksNew() throws IOException {
             //создаем эпик и подзадачу
             SubTask subTask2 = new SubTask(taskManager.generateId(), "Subtask 2",
                     "Subtask 2 description", StatusTask.NEW, epicId);
@@ -353,7 +354,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Статус эпика IN_PROGRESS, если подзадачи разных статусов (NEW и DONE)")
-        void epicStatusShouldBeInProgressWhenSubtasksMixed() {
+        void epicStatusShouldBeInProgressWhenSubtasksMixed() throws IOException {
 
             //добавляем подзадачи
             taskManager.createSubTask(subTaskNew);
@@ -365,7 +366,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Статус эпика DONE, если все подзадачи DONE")
-        void epicStatusShouldBeDoneWhenAllSubtasksDone() {
+        void epicStatusShouldBeDoneWhenAllSubtasksDone() throws IOException {
 
             //добавляем подзадачи
             taskManager.createSubTask(subTaskDone);
@@ -377,7 +378,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Статус эпика IN_PROGRESS, если хотя бы одна подзадача IN_PROGRESS")
-        void epicStatusShouldBeInProgressWhenAnySubtaskInProgress() {
+        void epicStatusShouldBeInProgressWhenAnySubtaskInProgress() throws IOException {
 
             //добавляем подзадачи
             taskManager.createSubTask(subTaskInProgress);
@@ -414,7 +415,7 @@ public class InMemoryTaskManagerTest {
         int subTaskId;
 
         @BeforeEach
-        void setUpDeleteTest() {
+        void setUpDeleteTest() throws IOException {
             Task task = new Task(taskManager.generateId(), "Task 1", "Task 1 description", StatusTask.NEW);
             taskId = taskManager.createTask(task);
 
@@ -464,7 +465,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("должна удаляться задача")
-        void deleteTaskById_shouldRemoveTask() {
+        void deleteTaskById_shouldRemoveTask() throws IOException {
 
             //удаляем задачу по её ID
             taskManager.deleteTaskById(taskId);
@@ -475,7 +476,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("должны удаляться все задачи")
-        void deleteAllTasks_shouldRemoveAllTasks() {
+        void deleteAllTasks_shouldRemoveAllTasks() throws IOException {
 
             //удаляем все задачи
             taskManager.deleteAllTasks();
@@ -486,7 +487,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("должен удаляться эпик и его подзадачи")
-        void deleteEpicById_shouldRemoveAllSubtasks() {
+        void deleteEpicById_shouldRemoveAllSubtasks() throws IOException {
 
             //удаляем эпик по его ID
             taskManager.deleteEpicById(epicId);
@@ -498,7 +499,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("должна удаляться подзадача и обновляться эпик")
-        void deleteSubTaskById_shouldRemoveSubtaskAndUpdateEpic() {
+        void deleteSubTaskById_shouldRemoveSubtaskAndUpdateEpic() throws IOException {
 
 
             //удаляем подзадачу по её ID
@@ -511,7 +512,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("история просмотров должна очищаться")
-        void deleteAllTasks_shouldClearHistory() {
+        void deleteAllTasks_shouldClearHistory() throws IOException {
 
             //удаляем все задачи
             taskManager.deleteAllTasks();
@@ -523,7 +524,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Удаление всех эпиков должно удалять все подзадачи")
-        void deleteAllEpics_shouldRemoveAllSubtasks() {
+        void deleteAllEpics_shouldRemoveAllSubtasks() throws IOException {
             taskManager.deleteAllEpics();
             assertTrue(taskManager.getAllSubTasks().isEmpty());
         }
@@ -587,7 +588,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Получение истории: должны возвращаться просмотренные задачи")
-        void getHistory_shouldReturnViewedTasks() {
+        void getHistory_shouldReturnViewedTasks() throws IOException {
 
             //созданы задача и эпик
             Task task = new Task(taskManager.generateId(), "Task 1", "Task 1 description", StatusTask.NEW);
@@ -611,7 +612,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Повторный просмотр задачи: история не должна дублироваться")
-        void shouldNotDuplicateHistoryWhenTaskViewedAgain() {
+        void shouldNotDuplicateHistoryWhenTaskViewedAgain() throws IOException {
             //создана задача
             Task task = new Task(taskManager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
@@ -629,7 +630,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Удаление задачи: задача должна удаляться из истории")
-        void shouldRemoveTaskFromHistoryWhenTaskDeleted() {
+        void shouldRemoveTaskFromHistoryWhenTaskDeleted() throws IOException {
             //создана задача
             Task task = new Task(taskManager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
@@ -645,7 +646,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Удаление эпика: эпик и его подзадачи должны удаляться из истории")
-        void shouldRemoveEpicAndSubtasksFromHistoryWhenEpicDeleted() {
+        void shouldRemoveEpicAndSubtasksFromHistoryWhenEpicDeleted() throws IOException {
             //создан эпик и подзадачи
             Epic epic = new Epic(taskManager.generateId(), "Epic 1", "Epic 1 description");
             int epicId = taskManager.createEpic(epic);
@@ -667,7 +668,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Удаление подзадачи: подзадача должна удаляться из истории")
-        void shouldRemoveSubtaskFromHistoryWhenSubtaskDeleted() {
+        void shouldRemoveSubtaskFromHistoryWhenSubtaskDeleted() throws IOException {
             //созданы эпик и подзадача
             Epic epic = new Epic(taskManager.generateId(), "Epic 1", "Epic 1 description");
             int epicId = taskManager.createEpic(epic);
@@ -686,7 +687,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Удаление задачи не должно влиять на другие задачи в истории")
-        void shouldNotAffectOtherTasksInHistoryWhenDeletingOneTask() {
+        void shouldNotAffectOtherTasksInHistoryWhenDeletingOneTask() throws IOException {
 
             //созданы две задачи
             Task task1 = new Task(taskManager.generateId(), "Task 1",
@@ -710,7 +711,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Очистка всех задач")
-        void shouldClearHistoryWhenAllTasksDeleted() {
+        void shouldClearHistoryWhenAllTasksDeleted() throws IOException {
             //созданы две задачи и просмотрены
             Task task1 = new Task(taskManager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
@@ -733,7 +734,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Очистка всех эпиков")
-        void shouldClearHistoryWhenAllEpicsDeleted() {
+        void shouldClearHistoryWhenAllEpicsDeleted() throws IOException {
             //созданы два эпика и просмотрены
             Epic epic1 = new Epic(taskManager.generateId(), "Epic 1", "Epic 1 description");
             Epic epic2 = new Epic(taskManager.generateId(), "Epic 2", "Epic 2 description");
@@ -753,7 +754,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Очистка всех подзадач")
-        void shouldClearHistoryWhenAllSubtasksDeleted() {
+        void shouldClearHistoryWhenAllSubtasksDeleted() throws IOException {
 
             //созданы эпик и две его подзадачи и просмотрены
             Epic epic = new Epic(taskManager.generateId(), "Epic 1", "Epic 1 description");
@@ -788,7 +789,7 @@ public class InMemoryTaskManagerTest {
         private Epic epic;
 
         @BeforeEach
-        void setUpImmutabilityTest() {
+        void setUpImmutabilityTest() throws IOException {
             taskId = taskManager.generateId();
             epicId = taskManager.generateId();
             subTaskId = taskManager.generateId();
@@ -798,10 +799,12 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Задача остается неизменной при добавлении в менеджер")
-        void taskRemainsUnchangedWhenAddedToManager() {
+        void taskRemainsUnchangedWhenAddedToManager() throws IOException {
             //создаём оригинальную задачу и её копию, генерируем ID
-            Task original = new Task(taskId, "Task 1", "Task 1 description", StatusTask.NEW);
-            Task copy = new Task(original.getId(), original.getName(), original.getDescription(), original.getStatus());
+            Task original = new Task(taskId, "Task 1",
+                    "Task 1 description", StatusTask.NEW);
+            Task copy = new Task(original.getId(), original.getName(),
+                    original.getDescription(), original.getStatus());
             //добавляем задачу в менеджер
             taskManager.createTask(original);
 
@@ -814,7 +817,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Эпик остается неизменной при добавлении в менеджер")
-        void epicRemainsUnchangedWhenAddedToManager() {
+        void epicRemainsUnchangedWhenAddedToManager() throws IOException {
             //создаём оригинальный эпик и его копию, генерируем ID
             Epic original = new Epic(epicId, "Epic 1", "Epic 1 description");
             Epic copy = new Epic(original.getId(), original.getName(), original.getDescription());
@@ -830,7 +833,7 @@ public class InMemoryTaskManagerTest {
 
         @Test
         @DisplayName("Подзадача остается неизменной при добавлении в менеджер")
-        void subtaskRemainsUnchangedWhenAddedToManager() {
+        void subtaskRemainsUnchangedWhenAddedToManager() throws IOException {
             //Создаём оригинальную подзадачу и ее копию, генерируем ID
             SubTask original = new SubTask(subTaskId, "Subtask 1",
                     "Subtask 1 description", StatusTask.NEW, epicId);

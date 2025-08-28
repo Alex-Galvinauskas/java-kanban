@@ -44,6 +44,10 @@ public class Task {
         return description;
     }
 
+    public TaskType getType() {
+        return TaskType.TASK;
+    }
+
 
     public StatusTask getStatus() {
         return status;
