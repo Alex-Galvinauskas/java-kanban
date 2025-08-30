@@ -9,7 +9,6 @@ import taskmanager.app.management.TaskManager;
 import taskmanager.app.service.history.InMemoryHistoryManager;
 import taskmanager.app.util.StatusCheckResult;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -66,10 +65,9 @@ public class InMemoryTaskManager implements TaskManager {
      *
      * @return id созданной задачи
      *
-     * @throws IllegalArgumentException если задача не прошла валидацию
      */
     @Override
-    public int createTask(Task task) throws IOException {
+    public int createTask(Task task) {
         validator.validateNotNull(task, "Задача");
         if (task.getId() == 0) {
             task.setId(generateId());
@@ -87,10 +85,9 @@ public class InMemoryTaskManager implements TaskManager {
      *
      * @return id созданного эпика
      *
-     * @throws IllegalArgumentException если эпик не прошел валидацию
      */
     @Override
-    public int createEpic(Epic epic) throws IOException {
+    public int createEpic(Epic epic) {
         if (epic.getId() == 0) {
             epic.setId(generateId());
         }
@@ -107,10 +104,9 @@ public class InMemoryTaskManager implements TaskManager {
      *
      * @return id созданной подзадачи
      *
-     * @throws IllegalArgumentException если подзадача не прошла валидацию
      */
     @Override
-    public int createSubTask(SubTask subTask) throws IOException {
+    public int createSubTask(SubTask subTask) {
         if (subTask.getId() == 0) {
             subTask.setId(generateId());
         }
@@ -250,10 +246,9 @@ public class InMemoryTaskManager implements TaskManager {
      *
      * @param task с обновленными данными
      *
-     * @throws IllegalArgumentException если задача не прошла валидацию
      */
     @Override
-    public void updateTask(Task task) throws IOException {
+    public void updateTask(Task task) {
         validator.validateTaskForUpdate(task, tasks);
         tasks.put(task.getId(), new Task(task));
         afterTaskUpdate(task);
@@ -264,10 +259,9 @@ public class InMemoryTaskManager implements TaskManager {
      *
      * @param subTask с обновленными данными
      *
-     * @throws IllegalArgumentException если подзадача не прошла валидацию
      */
     @Override
-    public void updateSubTask(SubTask subTask) throws IOException {
+    public void updateSubTask(SubTask subTask) {
         validator.validateSubTaskForUpdate(subTask, subTasks, epics);
         subTasks.put(subTask.getId(), subTask);
         updateEpicStatus(subTask.getEpicId());
@@ -279,7 +273,7 @@ public class InMemoryTaskManager implements TaskManager {
      * Очищает историю.
      */
     @Override
-    public void deleteAllTasks() throws IOException {
+    public void deleteAllTasks() {
         Set<Integer> taskIds = new HashSet<>(tasks.keySet());
         tasks.clear();
         for (Integer id : taskIds) {
@@ -294,7 +288,7 @@ public class InMemoryTaskManager implements TaskManager {
      * @param id задачи
      */
     @Override
-    public void deleteTaskById(int id) throws IOException {
+    public void deleteTaskById(int id) {
         validator.validatePositiveId(id);
         tasks.remove(id);
         historyManager.remove(id);
@@ -306,7 +300,7 @@ public class InMemoryTaskManager implements TaskManager {
      * Очищает историю для эпиков и подзадач
      */
     @Override
-    public void deleteAllEpics() throws IOException {
+    public void deleteAllEpics() {
         Set<Integer> epicIds = new HashSet<>(epics.keySet());
         epics.clear();
         for (Integer id : epicIds) {
@@ -322,7 +316,7 @@ public class InMemoryTaskManager implements TaskManager {
      * @param id эпика
      */
     @Override
-    public void deleteEpicById(int id) throws IOException {
+    public void deleteEpicById(int id) {
         validator.validatePositiveId(id);
         Epic epic = epics.get(id);
         validator.validateEpicExist(epics, id);
@@ -341,7 +335,7 @@ public class InMemoryTaskManager implements TaskManager {
      * Обновляет статусы эпиков и очищает историю
      */
     @Override
-    public void deleteAllSubTasks() throws IOException {
+    public void deleteAllSubTasks() {
         Set<Integer> subTaskIds = new HashSet<>(subTasks.keySet());
 
         subTasks.clear();
@@ -363,7 +357,7 @@ public class InMemoryTaskManager implements TaskManager {
      * @param id подзадачи
      */
     @Override
-    public void deleteSubTaskById(int id) throws IOException {
+    public void deleteSubTaskById(int id) {
         validator.validatePositiveId(id);
         SubTask subTask = subTasks.get(id);
         if (subTask != null) {
