@@ -87,7 +87,7 @@ mvn clean install
 │          │     ├──manager/
 │          │     │     ├── FileBackedTaskManager.java   # Реализация TaskManager для управления задачами в файловой системе
 │          │     │     └── InMemoryHistoryManager.java  # Реализация HistoryManager для хранения истории просмотров в памяти
-│          │     ├──history/
+│          │     └──history/
 │          │           └── InMemoryTaskManager.java     # Реализация TaskManager для управления задачами в памяти
            └── utils/
 │                └── StatusCheckResult.java 
@@ -100,7 +100,7 @@ test/
 │          └── service/         # Тесты для HistoryManager и TaskManager
  ```
 
-## 📦 Пакет `java.app.entity`
+## 📦 Пакет `taskmanager.app.entity`
 
 ### Класс `Task` (базовая задача)
 
@@ -179,7 +179,7 @@ public class SubTask extends Task {
 }  
 ```
 
-## 📦 Пакет `Service`
+## 📦 Пакет `service`
 
 ### Класс FileBackedTaskManager
 
