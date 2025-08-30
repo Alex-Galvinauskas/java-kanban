@@ -29,31 +29,32 @@ class TaskManagerCliTest {
     @AfterEach
     void restoreStreams() {
         System.setOut(System.out);
+        outContent.reset();
     }
 
     @Test
     @DisplayName("Чтение корректного ввода")
     void testReadIntInput() {
-        // вводим число 5
+        // Given
         String input = "5";
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
         consoleUi = new TaskManagerCLI(scanner, true);
-        //вызываем метод readIntInput()
+        //When
         int result = consoleUi.readIntInput();
-        //проверяем, что результат равен 5
+        //Then
         assertEquals(5, result);
     }
 
     @Test
     @DisplayName("Некорректный ввод с последующим корректным")
     void testReadIntInputWithInvalidInput() {
-        // вводим некорректный ввод и затем корректный
+        //Given
         String input = "abc\n10";
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
         consoleUi = new TaskManagerCLI(scanner, true);
-        //вызываем метод readIntInput()
+        //When
         int result = consoleUi.readIntInput();
-        //проверяем, что результат равен 10
+        //Then
         assertEquals(10, result);
         assertTrue(outContent.toString().contains("Неверный ввод. Пожалуйста введите число"));
     }
@@ -61,15 +62,15 @@ class TaskManagerCliTest {
     @Test
     @DisplayName("Создание задачи через консоль")
     void testReadTaskInput() {
-        // вводим данные для создания задачи
+        //Given
         String input = "Test Task\nTest Description";
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
         consoleUi = new TaskManagerCLI(scanner, true);
 
-        //Вызываем метод readTaskInput()
+        //When
         Task task = consoleUi.readTaskInput();
 
-        //Проверяем, что задача создана корректно
+        //Then
         assertEquals("Test Task", task.getName());
         assertEquals("Test Description", task.getDescription());
     }
@@ -77,15 +78,15 @@ class TaskManagerCliTest {
     @Test
     @DisplayName("Создание эпика через консоль")
     void testReadEpicInput() {
-        // вводим данные для создания задачи
+        //Given
         String input = "Test Epic\nTest Description";
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
         consoleUi = new TaskManagerCLI(scanner, true);
 
-        //Вызываем метод readEpicInput()
+        //When
         Epic epic = consoleUi.readEpicInput();
 
-        //Проверяем, что задача создана корректно
+        //Then
         assertEquals("Test Epic", epic.getName());
         assertEquals("Test Description", epic.getDescription());
     }
@@ -93,15 +94,15 @@ class TaskManagerCliTest {
     @Test
     @DisplayName("Создание подзадачи с указанием эпика через консоль")
     void testReadSubTaskInput() {
-        // вводим данные для создания задачи
+        //Given
         String input = "Test Subtask\nTest Description\n1";
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
         consoleUi = new TaskManagerCLI(scanner, true);
 
-        //Вызываем метод readSubtaskInput()
+        //When
         SubTask subtask = consoleUi.readSubTaskInput();
 
-        //Проверяем, что задача создана корректно
+        //Then
         assertEquals("Test Subtask", subtask.getName());
         assertEquals("Test Description", subtask.getDescription());
         assertEquals(1, subtask.getEpicId());

@@ -38,14 +38,14 @@ class InMemoryHistoryManagerTest {
     @Test
     @DisplayName("Добавление задачи в пустую историю")
     void testAddTaskToEmptyHistory() {
-        //пустая история
+        //Given
         List<Task> emptyHistory = historyManager.getHistory();
         assertTrue(emptyHistory.isEmpty());
 
-        //добавление задачи в историю
+        //When
         historyManager.add(task1);
 
-        //проверяем, что история содержит ровно одну задачу и это добавленная задача
+        //Then
         List<Task> history = historyManager.getHistory();
         assertEquals(1, history.size());
         assertEquals(task1, history.getFirst());
@@ -54,16 +54,16 @@ class InMemoryHistoryManagerTest {
     @Test
     @DisplayName("Добавление нескольких задач")
     void testAddMultipleTasks() {
-        //пустая история
+        //Given
         List<Task> emptyHistory = historyManager.getHistory();
         assertTrue(emptyHistory.isEmpty());
 
-        //добавление задач в историю
+        //When
         historyManager.add(task1);
         historyManager.add(task2);
         historyManager.add(task3);
 
-        //проверяем, что история содержит все три задачи в правильном порядке
+        //Then
         List<Task> history = historyManager.getHistory();
         assertEquals(3, history.size());
         assertEquals(task1, history.get(0));
@@ -74,14 +74,14 @@ class InMemoryHistoryManagerTest {
     @Test
     @DisplayName("Дубликат должен перемещаться в конец истории")
     void testAdd_shouldMoveDuplicateTaskToEnd() {
-        //две задачи
+        //Given
         historyManager.add(task1);
         historyManager.add(task2);
 
-        //добавляем дубликат
+        //When
         historyManager.add(task1);
 
-        //проверяем, что история содержит две задачи в правильном порядке
+        //Then
         List<Task> history = historyManager.getHistory();
         assertEquals(2, history.size());
         assertEquals(task2, history.get(0));
@@ -91,27 +91,25 @@ class InMemoryHistoryManagerTest {
     @Test
     @DisplayName("Null задача не должна добавляться в историю")
     void tetsAdd_shouldNotAddNullTask() {
-        //пустая история
-
-        //добавляем null задачу
+        //Given & When
         historyManager.add(null);
 
-        //история должна быть пустой
+        //Then
         assertTrue(historyManager.getHistory().isEmpty());
     }
 
     @Test
     @DisplayName("Удаление задачи из истории")
     void testRemove_shouldRemoveTaskFromHistory() {
-        // добавляем три задачи
+        //Given
         historyManager.add(task1);
         historyManager.add(task2);
         historyManager.add(task3);
 
-        //удаляем задачу
+        //When
         historyManager.remove(task2.getId());
 
-        //проверяем, что история содержит две задачи в правильном порядке
+        //Then
         List<Task> history = historyManager.getHistory();
         assertEquals(2, history.size());
         assertFalse(history.contains(task2));
@@ -121,13 +119,13 @@ class InMemoryHistoryManagerTest {
     @Test
     @DisplayName("Удаление несуществующей задачи из истории")
     void testRemove_shouldHandleNonExistingTask() {
-        // добавляем одну задачу
+        //Given
         historyManager.add(task1);
 
-        //удаляем несуществующую задачу
+        //When
         historyManager.remove(999);
 
-        //история остается неизменной
+        //Then
         assertEquals(1, historyManager.getHistory().size());
     }
 
@@ -135,16 +133,16 @@ class InMemoryHistoryManagerTest {
     @DisplayName("Проверка сохранения разных версий задачи")
     void testHistoryVersions() {
 
-        //добавляем задачу в исходном состоянии
+        //Given
         historyManager.add(task1);
         Task firstVersion = historyManager.getHistory().getFirst();
         assertEquals(StatusTask.NEW, firstVersion.getStatus());
 
-        //изменяем статус задачи и добавляем ее снова
+        //When
         task1.setStatus(StatusTask.IN_PROGRESS);
         historyManager.add(task1);
 
-        //проверяем, что история содержит только измененную версию задачи
+        //Then
         Task secondVersion = historyManager.getHistory().getFirst();
         assertEquals(StatusTask.IN_PROGRESS, secondVersion.getStatus());
     }
@@ -152,22 +150,22 @@ class InMemoryHistoryManagerTest {
     @Test
     @DisplayName("Очистка истории")
     void testClear_shouldClearHistory() {
-        //добавляем три задачи
+        //Given
         historyManager.add(task1);
         historyManager.add(task2);
         historyManager.add(task3);
 
-        //очищаем историю
+        //When
         historyManager.clear();
 
-        //история должна быть пустой
+        //Then
         assertTrue(historyManager.getHistory().isEmpty());
     }
 
     @Test
     @DisplayName("Проверка получения пустой истории")
     void testGetEmptyHistory() {
-        //получаем пустую историю
+        //Then
         assertTrue(historyManager.getHistory().isEmpty());
     }
 
@@ -175,14 +173,14 @@ class InMemoryHistoryManagerTest {
     @DisplayName("Проверка, что HistoryManager сохраняет задачу при вызове метода getTaskById")
     void testHistoryManagerIsUsed() throws IOException {
 
-        //создаем задачу в менеджере
+        //Given
         taskManager.createTask(task1);
 
-        //получаем задачу по идентификатору и добавляем ее в историю
+        //When
         Task retrievedTask = taskManager.getTaskById(1);
         historyManager.add(retrievedTask);
 
-        //проверяем, что история содержит эту задачу
+        //Then
         assertEquals(retrievedTask, historyManager.getHistory().getFirst());
     }
 }

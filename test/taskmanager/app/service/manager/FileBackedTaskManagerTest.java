@@ -39,17 +39,17 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("Сохранение и загрузка задач")
         void testShouldSaveAndLoadTasks() throws IOException {
-            // Создаем задачу
+            //Given
             Task task = new Task(manager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
             int taskId = manager.createTask(task);
             Task original = manager.getTaskById(taskId);
 
-            //Загружаем менеджер из файла
+            //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
             Task loadedTask = loadedManager.getTaskById(taskId);
 
-            //Проверяем, что загруженная задача совпадает с оригинальной
+            //Then
             assertNotNull(loadedTask);
             assertEquals(original, loadedTask);
         }
@@ -57,7 +57,7 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("Сохранение и загрузка эпика")
         void testShouldSaveAndLoadEpic() throws IOException {
-            //Создаем эпик и подзадачи
+            //Given
             Epic epic = new Epic(manager.generateId(), "Epic 1", "Epic 1 description");
             int epicId = manager.createEpic(epic);
 
@@ -69,11 +69,11 @@ class FileBackedTaskManagerTest {
             manager.createSubTask(subTask);
             manager.createSubTask(subTask2);
 
-            //Загружаем менеджер из файла
+            //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
             Epic loadedEpic = loadedManager.getEpicById(epicId);
 
-            //Проверяем, что загруженный Epic совпадает с оригинальным
+            //Then
             assertNotNull(loadedEpic);
             assertEquals(epic.getName(), loadedEpic.getName());
             assertEquals(epic.getDescription(), loadedEpic.getDescription());
@@ -84,10 +84,10 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("Обработка пустого файла")
         void testShouldHandleEmptyFile() throws IOException {
-            //Создаем пустой файл
+            //Given & When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
 
-            //Проверяем, что менеджер пустой
+            //Then
             assertTrue(loadedManager.getAllTasks().isEmpty());
             assertTrue(loadedManager.getAllEpics().isEmpty());
             assertTrue(loadedManager.getAllSubTasks().isEmpty());
@@ -101,16 +101,16 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("тест экранирования спецсимволов")
         void testShouldEscapeSpecialCharacters() throws IOException {
-            //Задача со спецсимволами
+            //Given
             Task task = new Task(manager.generateId(), "Task, with \"quotes\"",
                     "Description, with\nnewline", StatusTask.NEW);
             int taskId = manager.createTask(task);
 
-            //Загружаем менеджер из файла
+            //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
             Task loadedTask = loadedManager.getTaskById(taskId);
 
-            //Проверяем, что спецсимволы корректно обработаны
+            //Then
             assertEquals("Task, with \"quotes\"", loadedTask.getName());
             assertEquals("Description, with\nnewline", loadedTask.getDescription());
         }
@@ -118,13 +118,13 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("тест парсинга строк")
         void testShouldParseLines() throws IOException {
-            //Строка CSV с экранированием
+            //Given
             String csvLines = "1,TASK,\"Task, with \"\"quotes\"\"\",NEW,\"Description, with\nnewline\",";
 
-            //Парсим строку
+            //When
             Task task = FileBackedTasksManager.fromString(csvLines);
 
-            //Проверяем, что парсинг корректен
+            //Then
             assertEquals(1, task.getId());
             assertEquals("Task, with \"quotes\"", task.getName());
             assertEquals("Description, with\nnewline", task.getDescription());
@@ -139,25 +139,25 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("Тест генерации ID")
         void testShouldGenerateId() throws IOException {
-            //Создаем две задачи
+            //Given
             Task task1 = new Task(manager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
 
             Task task2 = new Task(manager.generateId(), "Task 2",
                     "Task 2 description", StatusTask.NEW);
 
-            //создаем их в менеджере
+            //When
             int id1 = manager.createTask(task1);
             int id2 = manager.createTask(task2);
 
-            //Проверяем, что ID генерируются корректно
+            //Then
             assertEquals(id1 + 1, id2);
         }
 
         @Test
         @DisplayName("Восстановление максимального идентификатора при загрузке")
         void testShouldRestoreMaxId() throws IOException {
-            //Создаем две задачи
+            //Given
             Task task1 = new Task(5, "Task 1",
                     "Task 1 description", StatusTask.NEW);
             Task task2 = new Task(10, "Task 2",
@@ -166,14 +166,14 @@ class FileBackedTaskManagerTest {
             manager.createTask(task1);
             manager.createTask(task2);
 
-            //Загружаем менеджер и создаем новую задачу
+            //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
             Task newTask = new Task(loadedManager.generateId(), "New Task",
                     "New Task description", StatusTask.NEW);
 
             int newId = loadedManager.createTask(newTask);
 
-            //Проверяем, что новый ID совпадает с ожидаемым
+            //Then
             assertEquals(11, newId);
         }
     }
@@ -185,7 +185,7 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("Тест обработки ошибок при сохранении")
         void testShouldHandleSaveError() throws IOException {
-            //Создаем файл только для чтения
+            //Given & When
             Path readOnlyFile = tempDir.resolve("readonly.csv");
             Files.createFile(readOnlyFile);
 
@@ -195,7 +195,7 @@ class FileBackedTaskManagerTest {
             Task task = new Task(readOnlyManager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
 
-            //Проверяем, что выбрасывается исключение при сохранении
+            //Then
             assertThrows(ManagerSaveException.class, () -> readOnlyManager.createTask(task)
             );
         }
@@ -203,7 +203,7 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("Тест обработки ошибок при неправильном CSV")
         void testShouldHandleInvalidCsv() {
-            //Проверяем, что выбрасывается исключение при неправильном CSV
+            //Then
             assertThrows(IllegalArgumentException.class, () ->
                     FileBackedTasksManager.fromString("invalid,csv,line")
             );
@@ -212,10 +212,10 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("Тест обработки ошибок при отсутствии epicId для подзадачи")
         void testShouldHandleMissingEpicIdForSubtask() {
-            //Строка подзадачи без epicId
+            //Given & When
             String invalidSubtaskLine = "1,SUBTASK,Subtask 1,NEW,Subtask 1 description,";
 
-            //Проверяем, что выбрасывается исключение при неправильной строке
+            //Then
             assertThrows(IllegalArgumentException.class, () ->
                     FileBackedTasksManager.fromString(invalidSubtaskLine)
             );
@@ -229,7 +229,7 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("должен восстанавливать связи между эпиками и подзадачами")
         void testShouldRestoreRelationships() throws IOException {
-            //Эпик с подзадачей
+            //Given
             Epic epic = new Epic(manager.generateId(), "Epic 1",
                     "Epic 1 description");
             int epicId = manager.createEpic(epic);
@@ -238,11 +238,11 @@ class FileBackedTaskManagerTest {
                     "Subtask 1 description", StatusTask.NEW, epicId);
             manager.createSubTask(subTask);
 
-            //Загружаем менеджер
+            //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
             Epic loadedEpic = loadedManager.getEpicById(epicId);
 
-            //Проверяем, что связи восстановлены корректно
+            //Then
             assertNotNull(loadedEpic);
             assertEquals(1, loadedEpic.getSubTaskIds().size());
             assertTrue(loadedEpic.getSubTaskIds().contains(subTask.getId()));
@@ -251,7 +251,7 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("должен вычислять статус эпика")
         void testShouldCalculateEpicStatus() throws IOException {
-            //эпик с подзадачами
+            //Given
             Epic epic = new Epic(manager.generateId(), "Epic 1",
                     "Epic 1 description");
             int epicId = manager.createEpic(epic);
@@ -263,24 +263,24 @@ class FileBackedTaskManagerTest {
             manager.createSubTask(subTask1);
             manager.createSubTask(subTask2);
 
-            //Получаем эпик
+            //When
             Epic restoredEpic = manager.getEpicById(epicId);
-            //Проверяем, что статус вычислен корректно
+            //Then
             assertEquals(StatusTask.IN_PROGRESS, restoredEpic.getStatus());
         }
 
         @Test
         @DisplayName("должен напрямую восстанавливать задачу")
         void testShouldRestoreTaskDirectly() throws IOException {
-            //Задача с определенным ID
+            //Given
             Task task = new Task(100, "Task 100",
                     "Task 100 description", StatusTask.IN_PROGRESS);
 
             manager.createTask(task);
 
-            //Получаем задачу по ID
+            //When
             Task restoredTask = manager.getTaskById(100);
-            //Проверяем, что задача восстановлена
+            //Then
             assertNotNull(restoredTask);
             assertEquals("Task 100", restoredTask.getName());
         }
@@ -288,7 +288,7 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("должен напрямую восстанавливать подзадачу")
         void testShouldDirectlyRestoreSubTask() throws IOException {
-            //Подзадача с определенным ID
+            //Given
             Epic epic = new Epic(300, "Epic", "Description");
             manager.createEpic(epic);
 
@@ -296,9 +296,9 @@ class FileBackedTaskManagerTest {
                     "Description", StatusTask.DONE, 300);
             manager.createSubTask(subTask);
 
-            //Получаем подзадачу по ID
+            //When
             SubTask restoredSubTask = manager.getSubTaskById(301);
-            //Проверяем, что подзадача восстановлена
+            //Then
             assertNotNull(restoredSubTask);
             assertEquals("SubTask", restoredSubTask.getName());
             assertEquals(300, restoredSubTask.getEpicId());
@@ -307,38 +307,37 @@ class FileBackedTaskManagerTest {
         @Test
         @DisplayName("должен создавать файл при его отсутствии")
         void testShouldCreateFileIfNotExists() throws IOException {
-            //создаем менеджер с несуществующим файлом
+            //Given
             Path nonExistentFile = tempDir.resolve("non-existent.csv");
             FileBackedTasksManager newManager = new FileBackedTasksManager(nonExistentFile);
 
             Task task = new Task(manager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
-            //создаем задачу
+            //When
             newManager.createTask(task);
 
-            //проверяем, что файл создан
+            //Then
             assertTrue(Files.exists(nonExistentFile));
         }
 
         @Test
         @DisplayName("должен сохранять после каждого изменения")
         void testShouldSaveAfterEachChange() throws IOException {
-            //Начальный размер файла
+            //Given
             long initialSize = getFileSize();
 
-            //Создаем задачу
             Task task = new Task(manager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
             manager.createTask(task);
-            //Проверяем, что размер файла увеличился
+
+            //When
             long afterCreationSize = getFileSize();
             assertTrue(afterCreationSize > initialSize);
 
-            //Обновляем задачу
             task.setStatus(StatusTask.DONE);
             manager.updateTask(task);
 
-            //Проверяем, что размер файла увеличился
+            //Then
             long afterUpdateSize = getFileSize();
             assertTrue(afterUpdateSize > afterCreationSize);
         }
