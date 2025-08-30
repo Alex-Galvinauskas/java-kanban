@@ -30,55 +30,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         this.filePath = Path.of(fileName);
     }
 
-
-    //тестовый метод
-    public static void main(String[] args) throws IOException {
-        Path testPath = Path.of("test_tasks.csv");
-
-        try {
-            FileBackedTasksManager fileManager = getFileBackedTaskManager(testPath);
-
-            System.out.println("Первый менеджер создан. Задачи сохранены в файл.");
-            System.out.println("Задачи в первом менеджере:");
-            System.out.println("Простыe задачи: " + fileManager.getAllTasks().size());
-            System.out.println("Эпики: " + fileManager.getAllEpics().size());
-            System.out.println("Подзадачи: " + fileManager.getAllSubTasks().size());
-
-            FileBackedTasksManager manager2 = FileBackedTasksManager.loadFromFile(testPath);
-
-            System.out.println("\nВторой менеджер загружен из файла.");
-            System.out.println("Задачи во втором менеджере:");
-            System.out.println("Простыe задачи: " + manager2.getAllTasks().size());
-            System.out.println("Эпики: " + manager2.getAllEpics().size());
-            System.out.println("Подзадачи: " + manager2.getAllSubTasks().size());
-
-            boolean allTasksMatch = fileManager.getAllTasks().equals(manager2.getAllTasks());
-            boolean allEpicsMatch = fileManager.getAllEpics().equals(manager2.getAllEpics());
-            boolean allSubTasksMatch = fileManager.getAllSubTasks().equals(manager2.getAllSubTasks());
-
-            System.out.println("\nРезультаты проверки:");
-            System.out.println("Простыe задачи совпадают: " + allTasksMatch);
-            System.out.println("Эпики совпадают: " + allEpicsMatch);
-            System.out.println("Подзадачи совпадают: " + allSubTasksMatch);
-
-            if (allTasksMatch && allEpicsMatch && allSubTasksMatch) {
-                System.out.println("✅ Все задачи успешно сохранены и загружены!");
-            } else {
-                System.out.println("❌ Обнаружено несоответствие в данных!");
-            }
-
-        } finally {
-            if (Files.exists(testPath)) {
-                try {
-                    Files.delete(testPath);
-                    System.out.println("✅ Временный файл удален: " + testPath.getFileName());
-                } catch (IOException e) {
-                    System.out.println("❌ Не удалось удалить временный файл: " + e.getMessage());
-                }
-            }
-        }
-    }
-
     /**
      * Загружает менеджер задач из файла.
      *
@@ -166,186 +117,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
     /**
-     * Убирает экран CSV.
-     *
-     * @param field - экранированная поле
-     *
-     * @return обычная строка
-     */
-    private static String unescapeCsvField(String field) {
-        if (field == null) {
-            return "";
-        }
-
-        String unescaped = field;
-        if (field.startsWith("\"") && field.endsWith("\"")) {
-            unescaped = field.substring(1, field.length() - 1);
-            unescaped = unescaped.replace("\"\"", "\"");
-        }
-        return unescaped.replace("\\n", "\n").replace("\\r", "\r");
-    }
-
-    /**
-     * Парсит строку CSV, учитывая экранирование.
-     *
-     * @param line - строка CSV
-     *
-     * @return список полей
-     */
-    private static List<String> parseCsvLine(String line) {
-        List<String> fields = new ArrayList<>();
-        StringBuilder currentField = new StringBuilder();
-        boolean inQuotes = false;
-
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-
-            if (c == '"') {
-                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
-                    currentField.append('"');
-                    i++;
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (c == ',' && !inQuotes) {
-                fields.add(currentField.toString());
-                currentField.setLength(0);
-            } else {
-                currentField.append(c);
-            }
-        }
-        fields.add(currentField.toString());
-        if (inQuotes) {
-            throw new IllegalArgumentException("Незакрытые кавычки в строке: " + line);
-        }
-        return fields;
-    }
-
-    /**
-     * Обновляет последовательность идентификаторов.
-     */
-    private void updateIdCounter() {
-        int maxId = 0;
-
-        for (Task task : getAllTasks()) {
-            maxId = Math.max(maxId, task.getId());
-        }
-        for (Epic epic : getAllEpics()) {
-            maxId = Math.max(maxId, epic.getId());
-        }
-        for (SubTask subTask : getAllSubTasks()) {
-            maxId = Math.max(maxId, subTask.getId());
-        }
-
-        idCounter.set(maxId);
-    }
-
-    /**
-     * Добавляет задачу в менеджере задач и обновляет счетчик.
-     *
-     * @param manager - менеджер задач
-     * @param task    - задача для добавления
-     */
-    private static void addTaskToManager(FileBackedTasksManager manager, Task task) {
-        switch (task.getType()) {
-            case TASK:
-                manager.restoreTaskDirectly(task);
-                break;
-            case EPIC:
-                manager.restoreEpicDirectly((Epic) task);
-                break;
-            case SUBTASK:
-                manager.restoreSubTaskDirectly((SubTask) task);
-                break;
-        }
-    }
-
-    /**
-     * Восстанавливает связи между epic и subTask.
-     *
-     * @param manager - менеджер задач
-     */
-    private static void restoreEpicRelationships(FileBackedTasksManager manager) {
-        for (SubTask subTask : manager.subTasks.values()) {
-            Epic epic = manager.epics.get(subTask.getEpicId());
-            if (epic != null) {
-                epic.addSubTaskId(subTask.getId());
-            }
-        }
-
-        for (Epic epic : manager.epics.values()) {
-            calculateEpicStatus(epic, manager.subTasks);
-        }
-    }
-
-    /**
-     * Вычисляет статус epic на основе статусов его subTask.
-     *
-     * @param epic     - epic
-     * @param subTasks - subTask
-     */
-    private static void calculateEpicStatus(Epic epic, Map<Integer, SubTask> subTasks) {
-        if (epic.getSubTaskIds().isEmpty()) {
-            epic.setStatus(StatusTask.NEW);
-            return;
-        }
-
-        boolean allNew = true;
-        boolean allDone = true;
-
-        for (int subTaskId : epic.getSubTaskIds()) {
-            SubTask subTask = subTasks.get(subTaskId);
-            if (subTask != null) {
-                StatusTask status = subTask.getStatus();
-                if (status != StatusTask.NEW) {
-                    allNew = false;
-                }
-                if (status != StatusTask.DONE) {
-                    allDone = false;
-                }
-            }
-        }
-
-        if (allNew) {
-            epic.setStatus(StatusTask.NEW);
-        } else if (allDone) {
-            epic.setStatus(StatusTask.DONE);
-        } else {
-            epic.setStatus(StatusTask.IN_PROGRESS);
-        }
-    }
-
-    private static FileBackedTasksManager getFileBackedTaskManager(Path testPath) throws IOException {
-        FileBackedTasksManager fileManager = new FileBackedTasksManager(testPath);
-
-        Task task1 = new Task(fileManager.generateId(), "Простая задача 1",
-                "Описание задачи 1", StatusTask.NEW);
-        Task task2 = new Task(fileManager.generateId(), "Простая задача 2",
-                "Описание задачи 2", StatusTask.IN_PROGRESS);
-
-        Epic epic1 = new Epic(fileManager.generateId(), "Эпик 1", "Описание эпика 1");
-        Epic epic2 = new Epic(fileManager.generateId(), "Эпик 2", "Описание эпика 2");
-
-        SubTask subTask1 = new SubTask(fileManager.generateId(), "Подзадача 1",
-                "Описание подзадачи 1", StatusTask.NEW, epic1.getId());
-        SubTask subTask2 = new SubTask(fileManager.generateId(), "Подзадача 2",
-                "Описание подзадачи 2", StatusTask.IN_PROGRESS, epic1.getId());
-        SubTask subTask3 = new SubTask(fileManager.generateId(), "Подзадача 3",
-                "Описание подзадачи 3", StatusTask.DONE, epic1.getId());
-
-        fileManager.createTask(task1);
-        fileManager.createTask(task2);
-        fileManager.createEpic(epic1);
-        fileManager.createEpic(epic2);
-        fileManager.createSubTask(subTask1);
-        fileManager.createSubTask(subTask2);
-        fileManager.createSubTask(subTask3);
-
-        fileManager.save();
-        return fileManager;
-    }
-
-    /**
      * Генерирует уникальный идентификатор.
      *
      * @return следующий доступный идентификатор
@@ -411,19 +182,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
     /**
-     * Сохраняет в файл.
-     *
-     * @param message - сообщение об ошибке
-     */
-    private void saveWithExceptionHandling(String message) {
-        try {
-            save();
-        } catch (RuntimeException e) {
-            throw new ManagerSaveException(message, e);
-        }
-    }
-
-    /**
      * Сохраняет все задачи в файл.
      */
     protected void save() {
@@ -436,6 +194,19 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             }
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка сохранения файла");
+        }
+    }
+
+    /**
+     * Сохраняет в файл.
+     *
+     * @param message - сообщение об ошибке
+     */
+    private void saveWithExceptionHandling(String message) {
+        try {
+            save();
+        } catch (RuntimeException e) {
+            throw new ManagerSaveException(message, e);
         }
     }
 
@@ -527,4 +298,233 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         }
         return escaped;
     }
+
+    /**
+     * Добавляет задачу в менеджере задач и обновляет счетчик.
+     *
+     * @param manager - менеджер задач
+     * @param task    - задача для добавления
+     */
+    private static void addTaskToManager(FileBackedTasksManager manager, Task task) {
+        switch (task.getType()) {
+            case TASK:
+                manager.restoreTaskDirectly(task);
+                break;
+            case EPIC:
+                manager.restoreEpicDirectly((Epic) task);
+                break;
+            case SUBTASK:
+                manager.restoreSubTaskDirectly((SubTask) task);
+                break;
+        }
+    }
+
+    /**
+     * Восстанавливает связи между epic и subTask.
+     *
+     * @param manager - менеджер задач
+     */
+    private static void restoreEpicRelationships(FileBackedTasksManager manager) {
+        for (SubTask subTask : manager.subTasks.values()) {
+            Epic epic = manager.epics.get(subTask.getEpicId());
+            if (epic != null) {
+                epic.addSubTaskId(subTask.getId());
+            }
+        }
+
+        for (Epic epic : manager.epics.values()) {
+            calculateEpicStatus(epic, manager.subTasks);
+        }
+    }
+
+    /**
+     * Вычисляет статус epic на основе статусов его subTask.
+     *
+     * @param epic     - epic
+     * @param subTasks - subTask
+     */
+    private static void calculateEpicStatus(Epic epic, Map<Integer, SubTask> subTasks) {
+        if (epic.getSubTaskIds().isEmpty()) {
+            epic.setStatus(StatusTask.NEW);
+            return;
+        }
+
+        boolean allNew = true;
+        boolean allDone = true;
+
+        for (int subTaskId : epic.getSubTaskIds()) {
+            SubTask subTask = subTasks.get(subTaskId);
+            if (subTask != null) {
+                StatusTask status = subTask.getStatus();
+                if (status != StatusTask.NEW) {
+                    allNew = false;
+                }
+                if (status != StatusTask.DONE) {
+                    allDone = false;
+                }
+            }
+        }
+
+        if (allNew) {
+            epic.setStatus(StatusTask.NEW);
+        } else if (allDone) {
+            epic.setStatus(StatusTask.DONE);
+        } else {
+            epic.setStatus(StatusTask.IN_PROGRESS);
+        }
+    }
+
+    /**
+     * Парсит строку CSV, учитывая экранирование.
+     *
+     * @param line - строка CSV
+     *
+     * @return список полей
+     */
+    private static List<String> parseCsvLine(String line) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder currentField = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    currentField.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (c == ',' && !inQuotes) {
+                fields.add(currentField.toString());
+                currentField.setLength(0);
+            } else {
+                currentField.append(c);
+            }
+        }
+        fields.add(currentField.toString());
+        if (inQuotes) {
+            throw new IllegalArgumentException("Незакрытые кавычки в строке: " + line);
+        }
+        return fields;
+    }
+
+    /**
+     * Убирает экран CSV.
+     *
+     * @param field - экранированная поле
+     *
+     * @return обычная строка
+     */
+    private static String unescapeCsvField(String field) {
+        if (field == null) {
+            return "";
+        }
+
+        String unescaped = field;
+        if (field.startsWith("\"") && field.endsWith("\"")) {
+            unescaped = field.substring(1, field.length() - 1);
+            unescaped = unescaped.replace("\"\"", "\"");
+        }
+        return unescaped.replace("\\n", "\n").replace("\\r", "\r");
+    }
+
+    /**
+     * Обновляет последовательность идентификаторов.
+     */
+    private void updateIdCounter() {
+        int maxId = 0;
+
+        for (Task task : getAllTasks()) {
+            maxId = Math.max(maxId, task.getId());
+        }
+        for (Epic epic : getAllEpics()) {
+            maxId = Math.max(maxId, epic.getId());
+        }
+        for (SubTask subTask : getAllSubTasks()) {
+            maxId = Math.max(maxId, subTask.getId());
+        }
+
+        idCounter.set(maxId);
+    }
+
+
+    private static FileBackedTasksManager getFileBackedTaskManager(Path testPath) throws IOException {
+        FileBackedTasksManager fileManager = new FileBackedTasksManager(testPath);
+
+        Task task1 = new Task(fileManager.generateId(), "Простая задача 1",
+                "Описание задачи 1", StatusTask.NEW);
+        Task task2 = new Task(fileManager.generateId(), "Простая задача 2",
+                "Описание задачи 2", StatusTask.IN_PROGRESS);
+
+        Epic epic1 = new Epic(fileManager.generateId(), "Эпик 1", "Описание эпика 1");
+        Epic epic2 = new Epic(fileManager.generateId(), "Эпик 2", "Описание эпика 2");
+
+        SubTask subTask1 = new SubTask(fileManager.generateId(), "Подзадача 1",
+                "Описание подзадачи 1", StatusTask.NEW, epic1.getId());
+        SubTask subTask2 = new SubTask(fileManager.generateId(), "Подзадача 2",
+                "Описание подзадачи 2", StatusTask.IN_PROGRESS, epic1.getId());
+        SubTask subTask3 = new SubTask(fileManager.generateId(), "Подзадача 3",
+                "Описание подзадачи 3", StatusTask.DONE, epic1.getId());
+
+        fileManager.createTask(task1);
+        fileManager.createTask(task2);
+        fileManager.createEpic(epic1);
+        fileManager.createEpic(epic2);
+        fileManager.createSubTask(subTask1);
+        fileManager.createSubTask(subTask2);
+        fileManager.createSubTask(subTask3);
+
+        fileManager.save();
+        return fileManager;
+    }
+
+    public static void main(String[] args) throws IOException {
+        Path testPath = Path.of("test_tasks.csv");
+
+        try {
+            FileBackedTasksManager fileManager = getFileBackedTaskManager(testPath);
+
+            System.out.println("Первый менеджер создан. Задачи сохранены в файл.");
+            System.out.println("Задачи в первом менеджере:");
+            System.out.println("Простыe задачи: " + fileManager.getAllTasks().size());
+            System.out.println("Эпики: " + fileManager.getAllEpics().size());
+            System.out.println("Подзадачи: " + fileManager.getAllSubTasks().size());
+
+            FileBackedTasksManager manager2 = FileBackedTasksManager.loadFromFile(testPath);
+
+            System.out.println("\nВторой менеджер загружен из файла.");
+            System.out.println("Задачи во втором менеджере:");
+            System.out.println("Простыe задачи: " + manager2.getAllTasks().size());
+            System.out.println("Эпики: " + manager2.getAllEpics().size());
+            System.out.println("Подзадачи: " + manager2.getAllSubTasks().size());
+
+            boolean allTasksMatch = fileManager.getAllTasks().equals(manager2.getAllTasks());
+            boolean allEpicsMatch = fileManager.getAllEpics().equals(manager2.getAllEpics());
+            boolean allSubTasksMatch = fileManager.getAllSubTasks().equals(manager2.getAllSubTasks());
+
+            System.out.println("\nРезультаты проверки:");
+            System.out.println("Простыe задачи совпадают: " + allTasksMatch);
+            System.out.println("Эпики совпадают: " + allEpicsMatch);
+            System.out.println("Подзадачи совпадают: " + allSubTasksMatch);
+
+            if (allTasksMatch && allEpicsMatch && allSubTasksMatch) {
+                System.out.println("✅ Все задачи успешно сохранены и загружены!");
+            } else {
+                System.out.println("❌ Обнаружено несоответствие в данных!");
+            }
+
+        } finally {
+            if (Files.exists(testPath)) {
+                try {
+                    Files.delete(testPath);
+                    System.out.println("✅ Временный файл удален: " + testPath.getFileName());
+                } catch (IOException e) {
+                    System.out.println("❌ Не удалось удалить временный файл: " + e.getMessage());
+                }
+            }
+        }
+    }
+
 }
