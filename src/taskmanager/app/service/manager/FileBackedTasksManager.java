@@ -1,16 +1,14 @@
-package service;
+package taskmanager.app.service.manager;
 
-import core.*;
-import exceptions.ManagerSaveException;
+import taskmanager.app.entity.*;
+import taskmanager.app.exception.ManagerSaveException;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,23 +17,77 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Менеджер задач с сохранением в CSV-файл.
  */
-public class FileBackedTaskManager extends InMemoryTaskManager {
+public class FileBackedTasksManager extends InMemoryTaskManager {
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
     private final Path filePath;
     private final AtomicInteger idCounter = new AtomicInteger(0);
-    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
-    public FileBackedTaskManager(final Path filePath) {
+    public FileBackedTasksManager(final Path filePath) {
         this.filePath = filePath;
+    }
+
+    public FileBackedTasksManager(String fileName) {
+        this.filePath = Path.of(fileName);
+    }
+
+
+    //тестовый метод
+    public static void main(String[] args) throws IOException {
+        Path testPath = Path.of("test_tasks.csv");
+
+        try {
+            FileBackedTasksManager fileManager = getFileBackedTaskManager(testPath);
+
+            System.out.println("Первый менеджер создан. Задачи сохранены в файл.");
+            System.out.println("Задачи в первом менеджере:");
+            System.out.println("Простыe задачи: " + fileManager.getAllTasks().size());
+            System.out.println("Эпики: " + fileManager.getAllEpics().size());
+            System.out.println("Подзадачи: " + fileManager.getAllSubTasks().size());
+
+            FileBackedTasksManager manager2 = FileBackedTasksManager.loadFromFile(testPath);
+
+            System.out.println("\nВторой менеджер загружен из файла.");
+            System.out.println("Задачи во втором менеджере:");
+            System.out.println("Простыe задачи: " + manager2.getAllTasks().size());
+            System.out.println("Эпики: " + manager2.getAllEpics().size());
+            System.out.println("Подзадачи: " + manager2.getAllSubTasks().size());
+
+            boolean allTasksMatch = fileManager.getAllTasks().equals(manager2.getAllTasks());
+            boolean allEpicsMatch = fileManager.getAllEpics().equals(manager2.getAllEpics());
+            boolean allSubTasksMatch = fileManager.getAllSubTasks().equals(manager2.getAllSubTasks());
+
+            System.out.println("\nРезультаты проверки:");
+            System.out.println("Простыe задачи совпадают: " + allTasksMatch);
+            System.out.println("Эпики совпадают: " + allEpicsMatch);
+            System.out.println("Подзадачи совпадают: " + allSubTasksMatch);
+
+            if (allTasksMatch && allEpicsMatch && allSubTasksMatch) {
+                System.out.println("✅ Все задачи успешно сохранены и загружены!");
+            } else {
+                System.out.println("❌ Обнаружено несоответствие в данных!");
+            }
+
+        } finally {
+            if (Files.exists(testPath)) {
+                try {
+                    Files.delete(testPath);
+                    System.out.println("✅ Временный файл удален: " + testPath.getFileName());
+                } catch (IOException e) {
+                    System.out.println("❌ Не удалось удалить временный файл: " + e.getMessage());
+                }
+            }
+        }
     }
 
     /**
      * Загружает менеджер задач из файла.
      *
      * @param filePath - путь к файлу
+     *
      * @return менеджер задач
      */
-    public static FileBackedTaskManager loadFromFile(Path filePath) {
-        FileBackedTaskManager manager = new FileBackedTaskManager(filePath);
+    public static FileBackedTasksManager loadFromFile(Path filePath) {
+        FileBackedTasksManager manager = new FileBackedTasksManager(filePath);
         try {
             if (!Files.exists(filePath)) {
                 return manager;
@@ -70,169 +122,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     /**
-     * Генерирует уникальный идентификатор.
-     *
-     * @return следующий доступный идентификатор
-     */
-    @Override
-    public int generateId() {
-        return idCounter.incrementAndGet();
-    }
-
-    @Override
-    protected void afterTaskCreation(Task task) {
-        saveWithExceptionHandling("Ошибка сохранения задачи");
-    }
-
-    @Override
-    protected void afterEpicCreation(Epic epic) {
-        saveWithExceptionHandling("Ошибка сохранения эпика");
-    }
-
-    @Override
-    protected void afterSubTaskCreation(SubTask subTask) {
-        saveWithExceptionHandling("Ошибка сохранения подзадачи");
-    }
-
-    @Override
-    protected void afterTaskUpdate(Task task) {
-        saveWithExceptionHandling("Ошибка обновления задачи");
-    }
-
-    @Override
-    protected void afterSubTaskUpdate(SubTask subTask) {
-        saveWithExceptionHandling("Ошибка обновления подзадачи");
-    }
-
-    @Override
-    protected void afterTaskDeletion(int taskId) {
-        saveWithExceptionHandling("Ошибка удаления задачи");
-    }
-
-    @Override
-    protected void afterEpicDeletion(int epicId) {
-        saveWithExceptionHandling("Ошибка удаления эпика");
-    }
-
-    @Override
-    protected void afterSubTaskDeletion(int subTaskId) {
-        saveWithExceptionHandling("Ошибка удаления подзадачи");
-    }
-
-    @Override
-    protected void afterAllTasksDeletion() {
-        saveWithExceptionHandling("Ошибка удаления всех задач");
-    }
-
-    @Override
-    protected void afterAllEpicsDeletion() {
-        saveWithExceptionHandling("Ошибка удаления всех эпиков");
-    }
-
-    @Override
-    protected void afterAllSubTasksDeletion() {
-        saveWithExceptionHandling("Ошибка удаления всех подзадач");
-    }
-
-    /**
-     * Сохраняет все задачи в файл.
-     */
-    protected void save() {
-        try {
-            ensureFileExists();
-
-            try (BufferedWriter writer = Files.newBufferedWriter(filePath, CHARSET)) {
-                writeHeader(writer);
-                writeAllTasks(writer);
-            }
-        } catch (IOException e) {
-            throw new ManagerSaveException("Ошибка сохранения файла");
-        }
-    }
-
-    /**
-     * Сохраняет в файл.
-     *
-     * @param message - сообщение об ошибке
-     */
-    private void saveWithExceptionHandling(String message) {
-        try {
-            save();
-        } catch (RuntimeException e) {
-            throw new ManagerSaveException(message, e);
-        }
-    }
-
-    /**
-     * Проверяет, существует ли файл и создает его при отсутствии.
-     * @throws IOException если возникла ошибка при создании файла
-     */
-    private void ensureFileExists() throws IOException {
-        Path parentDir = filePath.getParent();
-
-        if (parentDir != null && !Files.exists(parentDir)) {
-            Files.createDirectories(parentDir);
-        }
-
-        if (!Files.exists(filePath)) {
-            Files.createFile(filePath);
-        }
-    }
-
-    /**
-     * Пишет заголовок в файл.
-     *
-     * @param writer - объект для записи в файл
-     * @throws IOException если возникла ошибка при записи
-     */
-    private void writeHeader(BufferedWriter writer) throws IOException {
-        writer.write("id,type,name,status,description,epic");
-        writer.newLine();
-    }
-
-    /**
-     * Пишет все задачи в файл.
-     *
-     * @param writer для записи
-     * @throws IOException - если возникла ошибка при записи
-     */
-    private void writeAllTasks(BufferedWriter writer) throws IOException {
-        for (Task task : getAllTasks()) {
-            writer.write(taskToString(task));
-            writer.newLine();
-        }
-        for (Epic epic : getAllEpics()) {
-            writer.write(taskToString(epic));
-            writer.newLine();
-        }
-        for (SubTask subtask : getAllSubTasks()) {
-            writer.write(taskToString(subtask));
-            writer.newLine();
-        }
-    }
-
-    /**
-     * Преобразует задачу в строку для CSV.
-     *
-     * @param task - задача
-     * @return строка для CSV
-     */
-    private String taskToString(Task task) {
-        return String.join(",",
-                String.valueOf(task.getId()),
-                task.getType().name(),
-                escapeCsvField(task.getName()),
-                task.getStatus().name(),
-                escapeCsvField(task.getDescription()),
-                task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : ""
-        );
-    }
-
-    /**
      * Преобразует строку CSV в задачу.
      *
      * @param value - строка CSV
+     *
      * @return восстановленная задача
+     *
      * @throws IllegalArgumentException если строка не соответствует формату
      */
     public static Task fromString(String value) {
@@ -271,28 +166,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     /**
-     * Экран полей для CSV.
-     *
-     * @param field - поле для экранирования
-     * @return экранированная строка
-     */
-    private String escapeCsvField(String field) {
-        if (field == null) {
-            return "";
-        }
-
-        String escaped = field.replace("\n", "\\n").replace("\r", "\\r");
-
-        if (escaped.contains("\"") || escaped.contains(",")) {
-            return "\"" + escaped.replace("\"", "\"\"") + "\"";
-        }
-        return escaped;
-    }
-
-    /**
      * Убирает экран CSV.
      *
      * @param field - экранированная поле
+     *
      * @return обычная строка
      */
     private static String unescapeCsvField(String field) {
@@ -312,6 +189,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
      * Парсит строку CSV, учитывая экранирование.
      *
      * @param line - строка CSV
+     *
      * @return список полей
      */
     private static List<String> parseCsvLine(String line) {
@@ -345,7 +223,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     /**
      * Обновляет последовательность идентификаторов.
-     *
      */
     private void updateIdCounter() {
         int maxId = 0;
@@ -365,10 +242,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     /**
      * Добавляет задачу в менеджере задач и обновляет счетчик.
+     *
      * @param manager - менеджер задач
-     * @param task - задача для добавления
+     * @param task    - задача для добавления
      */
-    private static void addTaskToManager(FileBackedTaskManager manager, Task task) {
+    private static void addTaskToManager(FileBackedTasksManager manager, Task task) {
         switch (task.getType()) {
             case TASK:
                 manager.restoreTaskDirectly(task);
@@ -387,7 +265,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
      *
      * @param manager - менеджер задач
      */
-    private static void restoreEpicRelationships(FileBackedTaskManager manager) {
+    private static void restoreEpicRelationships(FileBackedTasksManager manager) {
         for (SubTask subTask : manager.subTasks.values()) {
             Epic epic = manager.epics.get(subTask.getEpicId());
             if (epic != null) {
@@ -403,7 +281,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     /**
      * Вычисляет статус epic на основе статусов его subTask.
      *
-     * @param epic - epic
+     * @param epic     - epic
      * @param subTasks - subTask
      */
     private static void calculateEpicStatus(Epic epic, Map<Integer, SubTask> subTasks) {
@@ -437,56 +315,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    //тестовый метод
-    public static void main(String[] args) throws IOException {
-        Path testPath = Path.of("test_tasks.csv");
-
-        try {
-            FileBackedTaskManager fileManager = getFileBackedTaskManager(testPath);
-
-            System.out.println("Первый менеджер создан. Задачи сохранены в файл.");
-            System.out.println("Задачи в первом менеджере:");
-            System.out.println("Простыe задачи: " + fileManager.getAllTasks().size());
-            System.out.println("Эпики: " + fileManager.getAllEpics().size());
-            System.out.println("Подзадачи: " + fileManager.getAllSubTasks().size());
-
-            FileBackedTaskManager manager2 = FileBackedTaskManager.loadFromFile(testPath);
-
-            System.out.println("\nВторой менеджер загружен из файла.");
-            System.out.println("Задачи во втором менеджере:");
-            System.out.println("Простыe задачи: " + manager2.getAllTasks().size());
-            System.out.println("Эпики: " + manager2.getAllEpics().size());
-            System.out.println("Подзадачи: " + manager2.getAllSubTasks().size());
-
-            boolean allTasksMatch = fileManager.getAllTasks().equals(manager2.getAllTasks());
-            boolean allEpicsMatch = fileManager.getAllEpics().equals(manager2.getAllEpics());
-            boolean allSubTasksMatch = fileManager.getAllSubTasks().equals(manager2.getAllSubTasks());
-
-            System.out.println("\nРезультаты проверки:");
-            System.out.println("Простыe задачи совпадают: " + allTasksMatch);
-            System.out.println("Эпики совпадают: " + allEpicsMatch);
-            System.out.println("Подзадачи совпадают: " + allSubTasksMatch);
-
-            if (allTasksMatch && allEpicsMatch && allSubTasksMatch) {
-                System.out.println("✅ Все задачи успешно сохранены и загружены!");
-            } else {
-                System.out.println("❌ Обнаружено несоответствие в данных!");
-            }
-
-        } finally {
-            if (Files.exists(testPath)) {
-                try {
-                    Files.delete(testPath);
-                    System.out.println("✅ Временный файл удален: " + testPath.getFileName());
-                } catch (IOException e) {
-                    System.out.println("❌ Не удалось удалить временный файл: " + e.getMessage());
-                }
-            }
-        }
-    }
-
-    private static FileBackedTaskManager getFileBackedTaskManager(Path testPath) throws IOException {
-        FileBackedTaskManager fileManager = new FileBackedTaskManager(testPath);
+    private static FileBackedTasksManager getFileBackedTaskManager(Path testPath) throws IOException {
+        FileBackedTasksManager fileManager = new FileBackedTasksManager(testPath);
 
         Task task1 = new Task(fileManager.generateId(), "Простая задача 1",
                 "Описание задачи 1", StatusTask.NEW);
@@ -513,5 +343,188 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         fileManager.save();
         return fileManager;
+    }
+
+    /**
+     * Генерирует уникальный идентификатор.
+     *
+     * @return следующий доступный идентификатор
+     */
+    @Override
+    public int generateId() {
+        return idCounter.incrementAndGet();
+    }
+
+    @Override
+    protected void afterSubTaskDeletion(int subTaskId) {
+        saveWithExceptionHandling("Ошибка удаления подзадачи");
+    }
+
+    @Override
+    protected void afterAllSubTasksDeletion() {
+        saveWithExceptionHandling("Ошибка удаления всех подзадач");
+    }
+
+    @Override
+    protected void afterEpicDeletion(int epicId) {
+        saveWithExceptionHandling("Ошибка удаления эпика");
+    }
+
+    @Override
+    protected void afterAllEpicsDeletion() {
+        saveWithExceptionHandling("Ошибка удаления всех эпиков");
+    }
+
+    @Override
+    protected void afterTaskDeletion(int taskId) {
+        saveWithExceptionHandling("Ошибка удаления задачи");
+    }
+
+    @Override
+    protected void afterAllTasksDeletion() {
+        saveWithExceptionHandling("Ошибка удаления всех задач");
+    }
+
+    @Override
+    protected void afterSubTaskUpdate(SubTask subTask) {
+        saveWithExceptionHandling("Ошибка обновления подзадачи");
+    }
+
+    @Override
+    protected void afterTaskUpdate(Task task) {
+        saveWithExceptionHandling("Ошибка обновления задачи");
+    }
+
+    @Override
+    protected void afterSubTaskCreation(SubTask subTask) {
+        saveWithExceptionHandling("Ошибка сохранения подзадачи");
+    }
+
+    @Override
+    protected void afterEpicCreation(Epic epic) {
+        saveWithExceptionHandling("Ошибка сохранения эпика");
+    }
+
+    @Override
+    protected void afterTaskCreation(Task task) {
+        saveWithExceptionHandling("Ошибка сохранения задачи");
+    }
+
+    /**
+     * Сохраняет в файл.
+     *
+     * @param message - сообщение об ошибке
+     */
+    private void saveWithExceptionHandling(String message) {
+        try {
+            save();
+        } catch (RuntimeException e) {
+            throw new ManagerSaveException(message, e);
+        }
+    }
+
+    /**
+     * Сохраняет все задачи в файл.
+     */
+    protected void save() {
+        try {
+            ensureFileExists();
+
+            try (BufferedWriter writer = Files.newBufferedWriter(filePath, CHARSET)) {
+                writeHeader(writer);
+                writeAllTasks(writer);
+            }
+        } catch (IOException e) {
+            throw new ManagerSaveException("Ошибка сохранения файла");
+        }
+    }
+
+    /**
+     * Проверяет, существует ли файл и создает его при отсутствии.
+     *
+     * @throws IOException если возникла ошибка при создании файла
+     */
+    private void ensureFileExists() throws IOException {
+        Path parentDir = filePath.getParent();
+
+        if (parentDir != null && !Files.exists(parentDir)) {
+            Files.createDirectories(parentDir);
+        }
+
+        if (!Files.exists(filePath)) {
+            Files.createFile(filePath);
+        }
+    }
+
+    /**
+     * Пишет заголовок в файл.
+     *
+     * @param writer - объект для записи в файл
+     *
+     * @throws IOException если возникла ошибка при записи
+     */
+    private void writeHeader(BufferedWriter writer) throws IOException {
+        writer.write("id,type,name,status,description,epic");
+        writer.newLine();
+    }
+
+    /**
+     * Пишет все задачи в файл.
+     *
+     * @param writer для записи
+     *
+     * @throws IOException - если возникла ошибка при записи
+     */
+    private void writeAllTasks(BufferedWriter writer) throws IOException {
+        for (Task task : getAllTasks()) {
+            writer.write(taskToString(task));
+            writer.newLine();
+        }
+        for (Epic epic : getAllEpics()) {
+            writer.write(taskToString(epic));
+            writer.newLine();
+        }
+        for (SubTask subtask : getAllSubTasks()) {
+            writer.write(taskToString(subtask));
+            writer.newLine();
+        }
+    }
+
+    /**
+     * Преобразует задачу в строку для CSV.
+     *
+     * @param task - задача
+     *
+     * @return строка для CSV
+     */
+    private String taskToString(Task task) {
+        return String.join(",",
+                String.valueOf(task.getId()),
+                task.getType().name(),
+                escapeCsvField(task.getName()),
+                task.getStatus().name(),
+                escapeCsvField(task.getDescription()),
+                task instanceof SubTask ? String.valueOf(((SubTask) task).getEpicId()) : ""
+        );
+    }
+
+    /**
+     * Экран полей для CSV.
+     *
+     * @param field - поле для экранирования
+     *
+     * @return экранированная строка
+     */
+    private String escapeCsvField(String field) {
+        if (field == null) {
+            return "";
+        }
+
+        String escaped = field.replace("\n", "\\n").replace("\r", "\\r");
+
+        if (escaped.contains("\"") || escaped.contains(",")) {
+            return "\"" + escaped.replace("\"", "\"\"") + "\"";
+        }
+        return escaped;
     }
 }

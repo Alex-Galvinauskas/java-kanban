@@ -1,6 +1,6 @@
-package core;
+package taskmanager.app.entity;
 
-import exceptions.TaskValidator;
+import taskmanager.app.exception.ValidationException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,10 +10,10 @@ import java.util.Objects;
 
 public final class Epic extends Task {
     private final List<Integer> subTaskIds;
-    private final TaskValidator validator = new TaskValidator();
+    private final ValidationException validator = new ValidationException();
 
     public Epic(int id, String name, String description) {
-        super(id, name,description, StatusTask.NEW);
+        super(id, name, description, StatusTask.NEW);
         validator.validateForEpicCreation(this);
         this.subTaskIds = new ArrayList<>();
     }
@@ -24,12 +24,11 @@ public final class Epic extends Task {
         this.subTaskIds = new ArrayList<>(other.subTaskIds);
     }
 
-    public Epic(String description, String name) {
-        super(description, name);
+    public Epic(String name, String description) {
+        super(name, description);
         this.subTaskIds = new ArrayList<>();
         this.setStatus(StatusTask.NEW);
     }
-
 
 
     public List<Integer> getSubTaskIds() {
@@ -47,13 +46,9 @@ public final class Epic extends Task {
         return TaskType.EPIC;
     }
 
-    public void removeSubTaskId(int subTaskId) {
-        validator.validatePositiveId(subTaskId);
-        subTaskIds.remove(Integer.valueOf(subTaskId));
-    }
-
-    public void clearSubTaskIds() {
-        subTaskIds.clear();
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), subTaskIds);
     }
 
     @Override
@@ -65,11 +60,6 @@ public final class Epic extends Task {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), subTaskIds);
-    }
-
-    @Override
     public String toString() {
         return "Эпик: " +
                 "Id: " + getId() +
@@ -77,5 +67,14 @@ public final class Epic extends Task {
                 ", Описание: " + getDescription() +
                 ", Статус: " + getStatus() +
                 ", Id подзадач: " + subTaskIds;
+    }
+
+    public void removeSubTaskId(int subTaskId) {
+        validator.validatePositiveId(subTaskId);
+        subTaskIds.remove(Integer.valueOf(subTaskId));
+    }
+
+    public void clearSubTaskIds() {
+        subTaskIds.clear();
     }
 }

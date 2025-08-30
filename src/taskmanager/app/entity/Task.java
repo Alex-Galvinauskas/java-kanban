@@ -1,11 +1,11 @@
-package core;
+package taskmanager.app.entity;
 
 import java.util.Objects;
 
 public class Task {
-    private int id;
     private final String name;
     private final String description;
+    private int id;
     private StatusTask status;
 
     public Task(int id, String name, String description, StatusTask status) {
@@ -22,7 +22,7 @@ public class Task {
         this.status = task.status;
     }
 
-    public Task(String description, String name) {
+    public Task(String name, String description) {
         this.description = description;
         this.name = name;
         this.status = StatusTask.NEW;
@@ -58,15 +58,15 @@ public class Task {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof Task task)) return false;
         return id == task.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 
     @Override

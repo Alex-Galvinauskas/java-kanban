@@ -1,9 +1,12 @@
-package service;
+package taskmanager.app.service.history;
 
-import core.Task;
-import contracts.HistoryManager;
+import taskmanager.app.entity.Task;
+import taskmanager.app.management.HistoryManager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * HistoryManager хранит историю просмотров в оперативной памяти.
@@ -11,28 +14,6 @@ import java.util.*;
  */
 
 public class InMemoryHistoryManager implements HistoryManager {
-
-    /**
-     * Node класс, представляющий узел двусвязного списка.
-     */
-    private static class Node {
-        final Task task;
-        Node next;
-        Node prev;
-
-        /**
-         * Создает новый узел
-         *
-         * @param task задача для хранения
-         * @param prev предыдущий узел
-         * @param next следующий узел
-         */
-        Node(Task task, Node prev, Node next) {
-            this.task = task;
-            this.prev = prev;
-            this.next = next;
-        }
-    }
 
     /**
      * Хеш-таблица для быстрого доступа к узлам
@@ -136,6 +117,16 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     /**
+     * Очищает историю
+     */
+    @Override
+    public void clear() {
+        historyMap.clear();
+        head = null;
+        tail = null;
+    }
+
+    /**
      * Добавляет узел в конец списка
      *
      * @param newNode узел для добавления (не может быть null)
@@ -156,13 +147,25 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     /**
-     * Очищает историю
+     * Node класс, представляющий узел двусвязного списка.
      */
-    @Override
-    public void clear() {
-        historyMap.clear();
-        head = null;
-        tail = null;
+    private static class Node {
+        final Task task;
+        Node next;
+        Node prev;
+
+        /**
+         * Создает новый узел
+         *
+         * @param task задача для хранения
+         * @param prev предыдущий узел
+         * @param next следующий узел
+         */
+        Node(Task task, Node prev, Node next) {
+            this.task = task;
+            this.prev = prev;
+            this.next = next;
+        }
     }
 }
 

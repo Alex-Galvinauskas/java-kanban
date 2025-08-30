@@ -1,19 +1,18 @@
-package app.console;
+package taskmanager.app.cli;
 
-import core.Epic;
-import core.SubTask;
-import core.Task;
-import managers.Managers;
-import service.InMemoryHistoryManager;
-import service.InMemoryTaskManager;
+import taskmanager.app.entity.Epic;
+import taskmanager.app.entity.SubTask;
+import taskmanager.app.entity.Task;
+import taskmanager.app.management.Managers;
+import taskmanager.app.management.TaskManager;
+import taskmanager.app.service.history.InMemoryHistoryManager;
 
 import java.io.IOException;
 import java.util.List;
-
 import java.util.Scanner;
 
-public class TaskManagerConsole {
-    private final InMemoryTaskManager taskManager = Managers.getDefault();
+public class TaskManagerCLI {
+    private final TaskManager taskManager = Managers.getDefault();
     private final InMemoryHistoryManager historyManager = Managers.getDefaultHistory();
     private final Scanner scanner;
 
@@ -22,7 +21,7 @@ public class TaskManagerConsole {
      */
     public boolean isRunning;
 
-    public TaskManagerConsole(Scanner scanner, boolean isRunning) {
+    public TaskManagerCLI(Scanner scanner, boolean isRunning) {
         this.scanner = scanner;
         this.isRunning = isRunning;
     }

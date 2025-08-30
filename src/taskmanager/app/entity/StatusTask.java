@@ -1,4 +1,4 @@
-package core;
+package taskmanager.app.entity;
 
 public enum StatusTask {
     NEW("Новое"),

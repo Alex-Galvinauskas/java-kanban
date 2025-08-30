@@ -1,6 +1,6 @@
-package core;
+package taskmanager.app.entity;
 
-import exceptions.TaskValidator;
+import taskmanager.app.exception.ValidationException;
 
 import java.util.Objects;
 
@@ -10,7 +10,7 @@ public class SubTask extends Task {
 
     public SubTask(int id, String name, String description, StatusTask status, int epicId) {
         super(id, name, description, status);
-        TaskValidator validator = new TaskValidator();
+        ValidationException validator = new ValidationException();
         validator.validateNotNull(id, name);
         this.epicId = epicId;
     }
@@ -21,8 +21,8 @@ public class SubTask extends Task {
     }
 
 
-    public SubTask(String description, String name, int epicId) {
-        super(description, name);
+    public SubTask(String name, String description, int epicId) {
+        super(name, description);
         this.epicId = epicId;
         this.setStatus(StatusTask.NEW);
     }
@@ -36,16 +36,16 @@ public class SubTask extends Task {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), epicId);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof SubTask subTask)) return false;
         if (!super.equals(obj)) return false;
         return epicId == subTask.epicId;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), epicId);
     }
 
     @Override
