@@ -19,6 +19,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class FileBackedTasksManager extends InMemoryTaskManager {
     private static final Charset CHARSET = StandardCharsets.UTF_8;
+    private static final int MIN_FIELDS_FOR_TASK = 5;
+    private static final int MIN_FIELDS_FOR_SUBTASK = 6;
+    private static final int FIELD_INDEX_ID = 0;
+    private static final int FIELD_INDEX_TYPE = 1;
+    private static final int FIELD_INDEX_NAME = 2;
+    private static final int FIELD_INDEX_STATUS = 3;
+    private static final int FIELD_INDEX_DESCRIPTION = 4;
+    private static final int FIELD_INDEX_EPIC_ID = 5;
+
     private final Path filePath;
     private final AtomicInteger idCounter = new AtomicInteger(0);
 
@@ -84,16 +93,16 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     public static Task fromString(String value) {
         List<String> fields = parseCsvLine(value);
 
-        if (fields.size() < 5) {
+        if (fields.size() < MIN_FIELDS_FOR_TASK) {
             throw new IllegalArgumentException("Недостаточно полей для создания задачи: " + value);
         }
 
         try {
-            int id = Integer.parseInt(fields.get(0));
-            TaskType type = TaskType.valueOf(fields.get(1));
-            String name = unescapeCsvField(fields.get(2));
-            StatusTask status = StatusTask.valueOf(fields.get(3));
-            String description = unescapeCsvField(fields.get(4));
+            int id = Integer.parseInt(fields.get(FIELD_INDEX_ID));
+            TaskType type = TaskType.valueOf(fields.get(FIELD_INDEX_TYPE));
+            String name = unescapeCsvField(fields.get(FIELD_INDEX_NAME));
+            StatusTask status = StatusTask.valueOf(fields.get(FIELD_INDEX_STATUS));
+            String description = unescapeCsvField(fields.get(FIELD_INDEX_DESCRIPTION));
 
             switch (type) {
                 case TASK:
@@ -101,10 +110,10 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 case EPIC:
                     return new Epic(id, name, description);
                 case SUBTASK:
-                    if (fields.size() < 6 || fields.get(5).isEmpty()) {
+                    if (fields.size() < MIN_FIELDS_FOR_SUBTASK || fields.get(FIELD_INDEX_EPIC_ID).isEmpty()) {
                         throw new IllegalArgumentException("Для подзадачи отсутствует epicId: " + value);
                     }
-                    int epicId = Integer.parseInt(fields.get(5));
+                    int epicId = Integer.parseInt(fields.get(FIELD_INDEX_EPIC_ID));
                     return new SubTask(id, name, description, status, epicId);
                 default:
                     throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
@@ -450,7 +459,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
 
-    private static FileBackedTasksManager getFileBackedTaskManager(Path testPath) throws IOException {
+    private static FileBackedTasksManager getFileBackedTaskManager(Path testPath) {
         FileBackedTasksManager fileManager = new FileBackedTasksManager(testPath);
 
         Task task1 = new Task(fileManager.generateId(), "Простая задача 1",
@@ -480,7 +489,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return fileManager;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Path testPath = Path.of("test_tasks.csv");
 
         try {
@@ -526,5 +535,4 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             }
         }
     }
-
 }
