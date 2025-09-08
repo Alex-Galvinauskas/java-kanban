@@ -10,6 +10,8 @@ import taskmanager.app.service.history.InMemoryHistoryManager;
 import taskmanager.app.util.StatusCheckResult;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * TaskManager
@@ -20,9 +22,9 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, Task> tasks = new HashMap<>();
     protected final Map<Integer, Epic> epics = new HashMap<>();
     protected final Map<Integer, SubTask> subTasks = new HashMap<>();
+    private final AtomicInteger nextId = new AtomicInteger(1);
     private final InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
     private final ValidationException validator = new ValidationException();
-    private int nextId = 1;
 
     /**
      * Восстанавливает задачу напрямую в карту задач.
@@ -64,7 +66,6 @@ public class InMemoryTaskManager implements TaskManager {
      * @param task задача для создания (не может быть null)
      *
      * @return id созданной задачи
-     *
      */
     @Override
     public int createTask(Task task) {
@@ -84,7 +85,6 @@ public class InMemoryTaskManager implements TaskManager {
      * @param epic эпик для создания (не может быть null)
      *
      * @return id созданного эпика
-     *
      */
     @Override
     public int createEpic(Epic epic) {
@@ -103,7 +103,6 @@ public class InMemoryTaskManager implements TaskManager {
      * @param subTask подзадача для создания (не может быть null)
      *
      * @return id созданной подзадачи
-     *
      */
     @Override
     public int createSubTask(SubTask subTask) {
@@ -144,14 +143,12 @@ public class InMemoryTaskManager implements TaskManager {
      * @throws IllegalArgumentException если id не положительный
      */
     @Override
-    public Task getTaskById(int id) {
+    public Optional<Task> getTaskById(int id) {
         validator.validatePositiveId(id);
-        Task task = tasks.get(id);
-        if (task != null) {
-            historyManager.add(task);
-            return new Task(task);
-        }
-        return null;
+        Optional<Task> taskOptional = Optional.ofNullable(tasks.get(id));
+
+        taskOptional.ifPresent(historyManager::add);
+        return taskOptional.map(Task::new);
     }
 
     /**
@@ -172,13 +169,14 @@ public class InMemoryTaskManager implements TaskManager {
      * @throws IllegalArgumentException если id не положительный
      */
     @Override
-    public Epic getEpicById(int id) {
+    public Optional<Epic> getEpicById(int id) {
         validator.validatePositiveId(id);
-        Epic epic = epics.get(id);
-        if (epic != null) {
-            historyManager.add(epic);
-        }
-        return epic != null ? new Epic(epic) : null;
+
+        return Optional.ofNullable(epics.get(id))
+                .map(epic -> {
+                    historyManager.add(epic);
+                    return new Epic(epic);
+                });
     }
 
     /**
@@ -193,17 +191,17 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<SubTask> getSubTasksByEpicId(int epicId) {
         validator.validatePositiveId(epicId);
-        Epic epic = epics.get(epicId);
-        validator.validateEpicExist(epics, epicId);
 
-        List<SubTask> result = new ArrayList<>();
-        for (int subtaskId : epic.getSubTaskIds()) {
-            SubTask subTask = subTasks.get(subtaskId);
-            if (subTask != null) {
-                result.add(new SubTask(subTask));
-            }
-        }
-        return List.copyOf(result);
+        return Optional.ofNullable(epics.get(epicId))
+                .map(epic -> {
+                    validator.validateEpicExist(epics, epicId);
+                    return epic.getSubTaskIds().stream()
+                            .map(subTasks::get)
+                            .filter(Objects::nonNull)
+                            .map(SubTask::new)
+                            .collect(Collectors.toList());
+                })
+                .orElse(Collections.emptyList());
     }
 
     /**
@@ -226,11 +224,12 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public SubTask getSubTaskById(int id) {
         validator.validatePositiveId(id);
-        SubTask subTask = subTasks.get(id);
-        if (subTask != null) {
-            historyManager.add(subTask);
-        }
-        return subTask != null ? new SubTask(subTask) : null;
+        return Optional.ofNullable(subTasks.get(id))
+                .map(subTask -> {
+                    historyManager.add(subTask);
+                    return new SubTask(subTask);
+                })
+                .orElse(null);
     }
 
     /**
@@ -245,7 +244,6 @@ public class InMemoryTaskManager implements TaskManager {
      * Обновляет задачу
      *
      * @param task с обновленными данными
-     *
      */
     @Override
     public void updateTask(Task task) {
@@ -258,7 +256,6 @@ public class InMemoryTaskManager implements TaskManager {
      * Обновляет подзадачу
      *
      * @param subTask с обновленными данными
-     *
      */
     @Override
     public void updateSubTask(SubTask subTask) {
@@ -276,9 +273,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteAllTasks() {
         Set<Integer> taskIds = new HashSet<>(tasks.keySet());
         tasks.clear();
-        for (Integer id : taskIds) {
-            historyManager.remove(id);
-        }
+        taskIds.forEach(historyManager::remove);
         afterAllTasksDeletion();
     }
 
@@ -301,12 +296,13 @@ public class InMemoryTaskManager implements TaskManager {
      */
     @Override
     public void deleteAllEpics() {
-        Set<Integer> epicIds = new HashSet<>(epics.keySet());
+        epics.keySet()
+                .forEach(id -> {
+                    historyManager.remove(id);
+                    deleteAllSubTasks();
+                });
+
         epics.clear();
-        for (Integer id : epicIds) {
-            historyManager.remove(id);
-            deleteAllSubTasks();
-        }
         afterAllEpicsDeletion();
     }
 
@@ -378,7 +374,7 @@ public class InMemoryTaskManager implements TaskManager {
      */
     @Override
     public int generateId() {
-        return nextId++;
+        return nextId.getAndIncrement();
     }
 
     protected void afterSubTaskDeletion(int subTaskId) {
@@ -411,19 +407,17 @@ public class InMemoryTaskManager implements TaskManager {
      * @param epicId id эпика
      */
     private void updateEpicStatus(int epicId) {
-        Epic epic = epics.get(epicId);
-        if (epic == null) {
-            return;
-        }
+        Optional.ofNullable(epics.get(epicId))
+                .ifPresent(epic -> {
+                    List<Integer> subtaskIds = epic.getSubTaskIds();
+                    if (subtaskIds.isEmpty()) {
+                        setEpicStatus(epic, StatusTask.NEW);
+                        return;
+                    }
 
-        List<Integer> subtaskIds = epic.getSubTaskIds();
-        if (subtaskIds.isEmpty()) {
-            setEpicStatus(epic, StatusTask.NEW);
-            return;
-        }
-
-        StatusCheckResult statusCheck = checkSubTasksStatuses(subtaskIds);
-        determineEpicStatus(epic, statusCheck);
+                    StatusCheckResult statusCheck = checkSubTasksStatuses(subtaskIds);
+                    determineEpicStatus(epic, statusCheck);
+                });
     }
 
     /**
@@ -444,22 +438,20 @@ public class InMemoryTaskManager implements TaskManager {
      * @return результат проверки
      */
     private StatusCheckResult checkSubTasksStatuses(List<Integer> subtaskIds) {
+        List<StatusTask> statuses = subtaskIds.stream()
+                .map(subTasks::get)
+                .filter(Objects::nonNull)
+                .map(SubTask::getStatus)
+                .toList();
+
+        boolean allNew = statuses.stream().allMatch(status -> status == StatusTask.NEW);
+        boolean allDone = statuses.stream().allMatch(status -> status == StatusTask.DONE);
+        boolean hasInProgress = statuses.stream().anyMatch(status -> status == StatusTask.IN_PROGRESS);
+
         StatusCheckResult result = new StatusCheckResult();
-
-        for (int subtaskId : subtaskIds) {
-            SubTask subTask = subTasks.get(subtaskId);
-            if (subTask == null) {
-                continue;
-            }
-
-            StatusTask status = subTask.getStatus();
-            if (status == StatusTask.IN_PROGRESS) {
-                result.setHasInProgress(true);
-                return result;
-            }
-            result.setAllNew(result.isAllNew() && (status == StatusTask.NEW));
-            result.setAllDone(result.isAllDone() && (status == StatusTask.DONE));
-        }
+        result.setAllNew(allNew);
+        result.setAllDone(allDone);
+        result.setHasInProgress(hasInProgress);
 
         return result;
     }

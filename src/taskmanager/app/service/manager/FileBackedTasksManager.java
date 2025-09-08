@@ -9,10 +9,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Менеджер задач с сохранением в CSV-файл.
@@ -334,16 +334,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      * @param manager - менеджер задач
      */
     private static void restoreEpicRelationships(FileBackedTasksManager manager) {
-        for (SubTask subTask : manager.subTasks.values()) {
-            Epic epic = manager.epics.get(subTask.getEpicId());
-            if (epic != null) {
-                epic.addSubTaskId(subTask.getId());
-            }
-        }
+        manager.subTasks.values().forEach(subTask -> {
+            Optional.ofNullable(manager.epics.get(subTask.getEpicId()))
+                    .ifPresent(epic -> epic.addSubTaskId(subTask.getId()));
+        });
 
-        for (Epic epic : manager.epics.values()) {
-            calculateEpicStatus(epic, manager.subTasks);
-        }
+        manager.epics.values().forEach(epic -> calculateEpicStatus(epic, manager.subTasks));
     }
 
     /**
@@ -358,21 +354,15 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             return;
         }
 
+        List<StatusTask> statuses = epic.getSubTaskIds()
+                .stream()
+                .map(subTasks::get)
+                .filter(Objects::nonNull)
+                .map(SubTask::getStatus)
+                .toList();
+
         boolean allNew = true;
         boolean allDone = true;
-
-        for (int subTaskId : epic.getSubTaskIds()) {
-            SubTask subTask = subTasks.get(subTaskId);
-            if (subTask != null) {
-                StatusTask status = subTask.getStatus();
-                if (status != StatusTask.NEW) {
-                    allNew = false;
-                }
-                if (status != StatusTask.DONE) {
-                    allDone = false;
-                }
-            }
-        }
 
         if (allNew) {
             epic.setStatus(StatusTask.NEW);
@@ -427,33 +417,28 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
      * @return обычная строка
      */
     private static String unescapeCsvField(String field) {
-        if (field == null) {
-            return "";
-        }
-
-        String unescaped = field;
-        if (field.startsWith("\"") && field.endsWith("\"")) {
-            unescaped = field.substring(1, field.length() - 1);
-            unescaped = unescaped.replace("\"\"", "\"");
-        }
-        return unescaped.replace("\\n", "\n").replace("\\r", "\r");
+        return Optional.ofNullable(field)
+                .map(f -> {
+                    String unescaped = f;
+                    if (f.startsWith("\"") && f.endsWith("\"")) {
+                        unescaped = f.substring(1, f.length() - 1);
+                        unescaped = unescaped.replace("\"\"", "\"");
+                    }
+                    return unescaped.replace("\\n", "\n").replace("\\r", "\r");
+                })
+                .orElse("");
     }
 
     /**
      * Обновляет последовательность идентификаторов.
      */
     private void updateIdCounter() {
-        int maxId = 0;
-
-        for (Task task : getAllTasks()) {
-            maxId = Math.max(maxId, task.getId());
-        }
-        for (Epic epic : getAllEpics()) {
-            maxId = Math.max(maxId, epic.getId());
-        }
-        for (SubTask subTask : getAllSubTasks()) {
-            maxId = Math.max(maxId, subTask.getId());
-        }
+        int maxId = Stream.concat(
+                        Stream.concat(getAllTasks().stream(), getAllEpics().stream()),
+                        getAllSubTasks().stream())
+                .mapToInt(Task::getId)
+                .max()
+                .orElse(0);
 
         idCounter.set(maxId);
     }

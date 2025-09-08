@@ -3,10 +3,7 @@ package taskmanager.app.service.history;
 import taskmanager.app.entity.Task;
 import taskmanager.app.management.HistoryManager;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * HistoryManager хранит историю просмотров в оперативной памяти.
@@ -34,11 +31,14 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public List<Task> getHistory() {
         List<Task> history = new ArrayList<>();
-        Node current = head;
-        while (current != null) {
-            history.add(current.task);
-            current = current.next;
-        }
+        Optional.ofNullable(head)
+                .ifPresent(node -> {
+                    Node current = node;
+                    while (current != null) {
+                        history.add(current.task);
+                        current = current.next;
+                    }
+                });
         return history;
     }
 
@@ -50,15 +50,14 @@ public class InMemoryHistoryManager implements HistoryManager {
      */
     @Override
     public void add(Task task) {
-        if (task == null) {
-            return;
-        }
-        int id = task.getId();
-        remove(id);
+        Optional.ofNullable(task).ifPresent(t -> {
+            int id = t.getId();
+            remove(id);
 
-        Node newNode = new Node(task, tail, null);
-        linkLast(newNode);
-        historyMap.put(id, newNode);
+            Node newNode = new Node(t, tail, null);
+            linkLast(newNode);
+            historyMap.put(id, newNode);
+        });
     }
 
     /**
@@ -68,11 +67,11 @@ public class InMemoryHistoryManager implements HistoryManager {
      */
     @Override
     public void remove(int id) {
-        Node node = historyMap.get(id);
-        if (node != null) {
-            removeNode(node);
-            historyMap.remove(id);
-        }
+        Optional.ofNullable(historyMap.get(id))
+                .ifPresent(node -> {
+                    removeNode(node);
+                    historyMap.remove(id);
+                });
     }
 
     /**
@@ -121,6 +120,7 @@ public class InMemoryHistoryManager implements HistoryManager {
      */
     @Override
     public void clear() {
+        historyMap.values().forEach(this::removeNode);
         historyMap.clear();
         head = null;
         tail = null;
@@ -132,18 +132,15 @@ public class InMemoryHistoryManager implements HistoryManager {
      * @param newNode узел для добавления (не может быть null)
      */
     private void linkLast(Node newNode) {
-
-        if (newNode == null) {
-            return;
-        }
-
-        if (head == null) {
-            head = newNode;
-        } else {
-            tail.next = newNode;
-            newNode.prev = tail;
-        }
-        tail = newNode;
+        Optional.ofNullable(newNode).ifPresent(node -> {
+            if (head == null) {
+                head = node;
+            } else {
+                tail.next = node;
+                node.prev = tail;
+            }
+            tail = node;
+        });
     }
 
     /**
