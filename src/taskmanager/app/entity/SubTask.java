@@ -2,6 +2,8 @@ package taskmanager.app.entity;
 
 import taskmanager.app.exception.ValidationException;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class SubTask extends Task {
@@ -15,11 +17,18 @@ public class SubTask extends Task {
         this.epicId = epicId;
     }
 
+    public SubTask(int id, String name, String description, StatusTask status,
+                   Duration duration, LocalDateTime startTime, int epicId) {
+        super(id, name, description, status, duration, startTime);
+        ValidationException validator = new ValidationException();
+        validator.validateNotNull(id, name);
+        this.epicId = epicId;
+    }
+
     public SubTask(SubTask other) {
         super(Objects.requireNonNull(other, "Объект SubTask не может быть null"));
         this.epicId = other.epicId;
     }
-
 
     public SubTask(String name, String description, int epicId) {
         super(name, description);
