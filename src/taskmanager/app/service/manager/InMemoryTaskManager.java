@@ -406,14 +406,13 @@ public class InMemoryTaskManager implements TaskManager {
      * @throws IllegalArgumentException если id не положительный
      */
     @Override
-    public SubTask getSubTaskById(int id) {
+    public Optional<SubTask> getSubTaskById(int id) {
         validator.validatePositiveId(id);
         return Optional.ofNullable(subTasks.get(id))
                 .map(subTask -> {
                     historyManager.add(subTask);
                     return new SubTask(subTask);
-                })
-                .orElse(null);
+                });
     }
 
     /**
