@@ -34,7 +34,7 @@ public class InMemoryTaskManager implements TaskManager {
     ).thenComparing(Task::getId));
     private final TimeManagerService timeManager;
 
-    public InMemoryTaskManager(){
+    public InMemoryTaskManager() {
         this.timeManager = new TimeManagerService();
     }
 
