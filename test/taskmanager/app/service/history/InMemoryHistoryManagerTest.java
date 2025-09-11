@@ -11,6 +11,7 @@ import taskmanager.app.management.TaskManager;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -177,10 +178,11 @@ class InMemoryHistoryManagerTest {
         taskManager.createTask(task1);
 
         //When
-        Task retrievedTask = taskManager.getTaskById(1);
-        historyManager.add(retrievedTask);
+        Optional<Task> retrievedTask = taskManager.getTaskById(1);
+        historyManager.add(retrievedTask.orElse(null));
 
         //Then
-        assertEquals(retrievedTask, historyManager.getHistory().getFirst());
+        assertTrue(retrievedTask.isPresent(), "Задача должна существовать");
+        assertEquals(retrievedTask.get(), historyManager.getHistory().getFirst());
     }
 }
