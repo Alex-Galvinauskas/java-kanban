@@ -2,15 +2,19 @@ package taskmanager.app.entity;
 
 import taskmanager.app.exception.ValidationException;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-
 public final class Epic extends Task {
     private final List<Integer> subTaskIds;
+    private LocalDateTime endTime;
     private final ValidationException validator = new ValidationException();
+    private LocalDateTime startTime;
+    private Duration duration;
 
     public Epic(int id, String name, String description) {
         super(id, name, description, StatusTask.NEW);
@@ -20,8 +24,15 @@ public final class Epic extends Task {
 
     public Epic(Epic other) {
         super(Objects.requireNonNull(other, "Эпик не может быть null").getId(),
-                other.getName(), other.getDescription(), other.getStatus());
+                other.getName(),
+                other.getDescription(),
+                other.getStatus(),
+                other.getDuration(),
+                other.getStartTime());
         this.subTaskIds = new ArrayList<>(other.subTaskIds);
+        this.endTime = other.endTime;
+        this.startTime = other.startTime;
+        this.duration = other.duration;
     }
 
     public Epic(String name, String description) {
@@ -30,6 +41,32 @@ public final class Epic extends Task {
         this.setStatus(StatusTask.NEW);
     }
 
+    @Override
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    @Override
+    public Duration getDuration() {
+        return duration;
+    }
+
+    @Override
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
 
     public List<Integer> getSubTaskIds() {
         return Collections.unmodifiableList(subTaskIds);
@@ -48,7 +85,7 @@ public final class Epic extends Task {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), subTaskIds);
+        return Objects.hash(super.hashCode(), subTaskIds, startTime, duration, endTime);
     }
 
     @Override
@@ -56,7 +93,7 @@ public final class Epic extends Task {
         if (this == o) return true;
         if (!(o instanceof Epic epic)) return false;
         if (!super.equals(o)) return false;
-        return subTaskIds.equals(epic.subTaskIds);
+        return Objects.equals(subTaskIds, epic.subTaskIds);
     }
 
     @Override
@@ -66,6 +103,9 @@ public final class Epic extends Task {
                 ", Имя:'" + getName() +
                 ", Описание: " + getDescription() +
                 ", Статус: " + getStatus() +
+                ", Длительность: " + (duration != null ? duration.toMinutes() + "мин" : "Не указана") +
+                ", Время начала: " + (startTime != null ? startTime : "Не указано") +
+                ", Время окончания: " + (endTime != null ? endTime : "Не указано") +
                 ", Id подзадач: " + subTaskIds;
     }
 
