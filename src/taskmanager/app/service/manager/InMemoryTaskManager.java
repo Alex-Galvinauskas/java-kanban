@@ -42,12 +42,7 @@ public class InMemoryTaskManager implements TaskManager {
      * Возвращает задачи в порядке приоритета (по startTime)
      */
     public List<Task> getPrioritizedTasks() {
-        return prioritizedTasks.stream()
-                .sorted(Comparator.comparing(
-                        Task::getStartTime,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ).thenComparing(Task::getId))
-                .collect(Collectors.toList());
+        return new ArrayList<>(prioritizedTasks);
     }
 
     /**
