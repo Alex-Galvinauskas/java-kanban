@@ -1,9 +1,6 @@
 package taskmanager.app.service.manager;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import taskmanager.app.entity.*;
 import taskmanager.app.exception.ManagerSaveException;
@@ -21,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Тесты файлового менеджера задач")
 class FileBackedTaskManagerTest {
+    private TestInfo testInfo;
 
     @TempDir
     Path tempDir;
@@ -28,9 +26,17 @@ class FileBackedTaskManagerTest {
     private Path testFile;
 
     @BeforeEach
-    void setUp() {
+    void setUp(TestInfo testInfo) {
+        this.testInfo = testInfo;
+        System.out.printf("🚀 Подготовка теста: %s%n", testInfo.getDisplayName());
+
         testFile = tempDir.resolve("test_tasks.csv");
         manager = new FileBackedTasksManager(testFile);
+    }
+
+    @AfterEach
+    void tearDown() {
+        System.out.printf("✅ Тест завершен: %s%n%n", testInfo.getDisplayName());
     }
 
     @Nested
