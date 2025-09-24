@@ -1,42 +1,8 @@
 name: Java Tests
 
 on:
-  push:
-    branches: [ "main", "master" ]
   pull_request:
-    branches: [ "main", "master" ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Build and test with Maven
-        run: mvn -B clean compile test-compile test
-        env:
-          CI: true
-
-      - name: Upload test reports
-        uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: test-reports
-          path: target/surefire-reports
+    uses: yandex-praktikum/java-kanban/.github/workflows/api-tests.yml@ci
