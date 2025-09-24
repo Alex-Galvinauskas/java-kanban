@@ -16,8 +16,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Тесты для обработчика истории и приоритетных задач")
 class HistoryAndPrioritizedHandlerTest {
@@ -63,10 +62,11 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
+
         Task[] history = gson.fromJson(response.body(), Task[].class);
-        assertEquals(1, history.length);
-        assertEquals("Task 1", history[0].getName());
+        assertThat(history).hasSize(1);
+        assertThat(history[0].getName()).isEqualTo("Task 1");
     }
 
     @Test
@@ -92,10 +92,12 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
+
         Task[] prioritized = gson.fromJson(response.body(), Task[].class);
-        assertEquals(2, prioritized.length);
-        assertEquals("Task 2", prioritized[0].getName());
+        assertThat(prioritized).hasSize(2);
+        assertThat(prioritized[0].getName()).isEqualTo("Task 2");
+        assertThat(prioritized[1].getName()).isEqualTo("Task 1");
     }
 
     @Test
@@ -111,7 +113,7 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(400, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(400);
     }
 
     @Test
@@ -127,9 +129,10 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
+
         Task[] history = gson.fromJson(response.body(), Task[].class);
-        assertEquals(0, history.length);
+        assertThat(history).isEmpty();
     }
 
     @Test
@@ -153,15 +156,12 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
-        Task[] history = gson.fromJson(response.body(), Task[].class);
-        assertEquals(5, history.length);
+        assertThat(response.statusCode()).isEqualTo(200);
 
-        assertEquals("Task 1", history[0].getName());
-        assertEquals("Task 2", history[1].getName());
-        assertEquals("Task 3", history[2].getName());
-        assertEquals("Task 4", history[3].getName());
-        assertEquals("Task 5", history[4].getName());
+        Task[] history = gson.fromJson(response.body(), Task[].class);
+        assertThat(history).hasSize(5);
+        assertThat(history).extracting(Task::getName)
+                .containsExactly("Task 1", "Task 2", "Task 3", "Task 4", "Task 5");
     }
 
     @Test
@@ -177,9 +177,10 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
+
         Task[] prioritized = gson.fromJson(response.body(), Task[].class);
-        assertEquals(0, prioritized.length);
+        assertThat(prioritized).isEmpty();
     }
 
     @Test
@@ -195,7 +196,7 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(400, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(400);
     }
 
     @Test
@@ -211,7 +212,7 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertTrue(response.statusCode() >= 400);
+        assertThat(response.statusCode()).isGreaterThanOrEqualTo(400);
     }
 
     @Test
@@ -236,15 +237,83 @@ class HistoryAndPrioritizedHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
+
         Task[] history = gson.fromJson(response.body(), Task[].class);
-        assertEquals(1, history.length);
+        assertThat(history).hasSize(1);
 
         Task returnedTask = history[0];
-        assertEquals("Test Task", returnedTask.getName());
-        assertEquals("Test Description", returnedTask.getDescription());
-        assertEquals(StatusTask.IN_PROGRESS, returnedTask.getStatus());
-        assertEquals(duration, returnedTask.getDuration());
-        assertEquals(startTime, returnedTask.getStartTime());
+        assertThat(returnedTask.getName()).isEqualTo("Test Task");
+        assertThat(returnedTask.getDescription()).isEqualTo("Test Description");
+        assertThat(returnedTask.getStatus()).isEqualTo(StatusTask.IN_PROGRESS);
+        assertThat(returnedTask.getDuration()).isEqualTo(duration);
+        assertThat(returnedTask.getStartTime()).isEqualTo(startTime);
+    }
+
+    @Test
+    @DisplayName("Приоритетные задачи сортируются по времени начала")
+    void testPrioritizedTasksSorting() throws IOException, InterruptedException {
+        // Given
+        Task earlyTask = new Task(manager.generateId(), "Early Task",
+                "Description", StatusTask.NEW,
+                Duration.ofMinutes(15), LocalDateTime.now().plusMinutes(30));
+
+        Task middleTask = new Task(manager.generateId(), "Middle Task",
+                "Description", StatusTask.NEW,
+                Duration.ofMinutes(20), LocalDateTime.now().plusHours(1));
+
+        Task lateTask = new Task(manager.generateId(), "Late Task",
+                "Description", StatusTask.NEW,
+                Duration.ofMinutes(25), LocalDateTime.now().plusHours(2));
+
+        manager.createTask(lateTask);
+        manager.createTask(earlyTask);
+        manager.createTask(middleTask);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/prioritized"))
+                .GET()
+                .build();
+
+        // When
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // Then
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        Task[] prioritized = gson.fromJson(response.body(), Task[].class);
+        assertThat(prioritized).hasSize(3);
+        assertThat(prioritized).extracting(Task::getName)
+                .containsExactly("Early Task", "Middle Task", "Late Task");
+    }
+
+    @Test
+    @DisplayName("Задачи без времени начала не попадают в приоритетный список")
+    void testTasksWithoutStartTimeNotInPrioritized() throws IOException, InterruptedException {
+        // Given
+        Task taskWithTime = new Task(manager.generateId(), "Task with time",
+                "Description", StatusTask.NEW,
+                Duration.ofMinutes(15), LocalDateTime.now().plusHours(1));
+
+        Task taskWithoutTime = new Task(manager.generateId(), "Task without time",
+                "Description", StatusTask.NEW);
+
+        manager.createTask(taskWithTime);
+        manager.createTask(taskWithoutTime);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/prioritized"))
+                .GET()
+                .build();
+
+        // When
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // Then
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        Task[] prioritized = gson.fromJson(response.body(), Task[].class);
+        assertThat(prioritized).hasSize(1);
+        assertThat(prioritized[0].getName()).isEqualTo("Task with time");
     }
 }

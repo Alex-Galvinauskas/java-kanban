@@ -18,8 +18,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Тесты для обработчика подзадач")
 class SubtasksHandlerTest {
@@ -76,11 +75,12 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(201, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(201);
+
         List<SubTask> subTasks = manager.getAllSubTasks();
-        assertEquals(2, subTasks.size());
-        assertEquals("Test SubTask", subTasks.get(1).getName());
-        assertEquals(epicId, subTasks.get(1).getEpicId());
+        assertThat(subTasks).hasSize(2);
+        assertThat(subTasks.get(1).getName()).isEqualTo("Test SubTask");
+        assertThat(subTasks.get(1).getEpicId()).isEqualTo(epicId);
     }
 
     @Test
@@ -96,9 +96,10 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
+
         List<?> subTasks = gson.fromJson(response.body(), List.class);
-        assertEquals(1, subTasks.size());
+        assertThat(subTasks).hasSize(1);
     }
 
     @Test
@@ -114,10 +115,11 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
+
         SubTask subTask = gson.fromJson(response.body(), SubTask.class);
-        assertEquals("Existing SubTask", subTask.getName());
-        assertEquals(subTaskId, subTask.getId());
+        assertThat(subTask.getName()).isEqualTo("Existing SubTask");
+        assertThat(subTask.getId()).isEqualTo(subTaskId);
     }
 
     @Test
@@ -134,8 +136,8 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(404, response.statusCode());
-        assertTrue(response.body().contains("не найдена"));
+        assertThat(response.statusCode()).isEqualTo(404);
+        assertThat(response.body()).contains("не найдена");
     }
 
     @Test
@@ -156,10 +158,11 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(200, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(200);
+
         SubTask subTask = manager.getSubTaskById(subTaskId).orElseThrow();
-        assertEquals("Updated SubTask", subTask.getName());
-        assertEquals(StatusTask.IN_PROGRESS, subTask.getStatus());
+        assertThat(subTask.getName()).isEqualTo("Updated SubTask");
+        assertThat(subTask.getStatus()).isEqualTo(StatusTask.IN_PROGRESS);
     }
 
     @Test
@@ -175,9 +178,9 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(204, response.statusCode());
-        assertTrue(manager.getSubTaskById(subTaskId).isEmpty());
-        assertEquals(0, manager.getAllSubTasks().size());
+        assertThat(response.statusCode()).isEqualTo(204);
+        assertThat(manager.getSubTaskById(subTaskId)).isEmpty();
+        assertThat(manager.getAllSubTasks()).isEmpty();
     }
 
     @Test
@@ -189,7 +192,7 @@ class SubtasksHandlerTest {
                 Duration.ofMinutes(5), LocalDateTime.now().plusHours(2), epicId);
         manager.createSubTask(anotherSubTask);
 
-        assertEquals(2, manager.getAllSubTasks().size());
+        assertThat(manager.getAllSubTasks()).hasSize(2);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8080/subtasks"))
@@ -200,8 +203,8 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(204, response.statusCode());
-        assertEquals(0, manager.getAllSubTasks().size());
+        assertThat(response.statusCode()).isEqualTo(204);
+        assertThat(manager.getAllSubTasks()).isEmpty();
     }
 
     @Test
@@ -218,8 +221,8 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(204, response.statusCode());
-        assertEquals(1, manager.getAllSubTasks().size());
+        assertThat(response.statusCode()).isEqualTo(204);
+        assertThat(manager.getAllSubTasks()).hasSize(1);
     }
 
     @Test
@@ -238,8 +241,8 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(400, response.statusCode());
-        assertTrue(response.body().contains("Неверный формат JSON"));
+        assertThat(response.statusCode()).isEqualTo(400);
+        assertThat(response.body()).contains("Неверный формат JSON");
     }
 
     @Test
@@ -261,8 +264,8 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(406, response.statusCode());
-        assertTrue(response.body().contains("пересекается"));
+        assertThat(response.statusCode()).isEqualTo(406);
+        assertThat(response.body()).contains("пересекается");
     }
 
     @Test
@@ -284,7 +287,7 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(400, response.statusCode());
+        assertThat(response.statusCode()).isEqualTo(400);
     }
 
     @Test
@@ -300,8 +303,8 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(400, response.statusCode());
-        assertTrue(response.body().contains("Метод не поддерживается"));
+        assertThat(response.statusCode()).isEqualTo(400);
+        assertThat(response.body()).contains("Метод не поддерживается");
     }
 
     @Test
@@ -317,7 +320,60 @@ class SubtasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertEquals(400, response.statusCode());
-        assertTrue(response.body().contains("Неверный формат ID подзадачи"));
+        assertThat(response.statusCode()).isEqualTo(400);
+        assertThat(response.body()).contains("Неверный формат ID подзадачи");
+    }
+
+    @Test
+    @DisplayName("Создание подзадачи с несуществующим эпиком")
+    void testCreateSubTaskWithNonExistentEpic() throws IOException, InterruptedException {
+        // Given
+        int nonExistentEpicId = 9999;
+        SubTask subTask = new SubTask(manager.generateId(), "Test SubTask",
+                "Description", StatusTask.NEW,
+                Duration.ofMinutes(5), LocalDateTime.now(), nonExistentEpicId);
+        String subTaskJson = gson.toJson(subTask);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/subtasks"))
+                .POST(HttpRequest.BodyPublishers.ofString(subTaskJson))
+                .build();
+
+        // When
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // Then
+        assertThat(response.statusCode()).isEqualTo(400);
+        assertThat(response.body()).contains("Эпик с id " + nonExistentEpicId + " не существует"); // Исправлено
+    }
+
+    @Test
+    @DisplayName("Обновление подзадачи с изменением эпика")
+    void testUpdateSubTaskChangeEpic() throws IOException, InterruptedException {
+        // Given
+        Epic newEpic = new Epic("New Epic", "For moving subtask");
+        int newEpicId = manager.createEpic(newEpic);
+
+        SubTask updatedSubTask = new SubTask(subTaskId, "Moved SubTask",
+                "Moved description", StatusTask.DONE,
+                Duration.ofMinutes(20),
+                LocalDateTime.now().plusHours(2), newEpicId);
+        String updatedJson = gson.toJson(updatedSubTask);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/subtasks/" + subTaskId))
+                .POST(HttpRequest.BodyPublishers.ofString(updatedJson))
+                .build();
+
+        // When
+        HttpResponse<String> response = client.send(request,
+                HttpResponse.BodyHandlers.ofString());
+
+        // Then
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        SubTask subTask = manager.getSubTaskById(subTaskId).orElseThrow();
+        assertThat(subTask.getEpicId()).isEqualTo(newEpicId);
+        assertThat(subTask.getStatus()).isEqualTo(StatusTask.DONE);
     }
 }
