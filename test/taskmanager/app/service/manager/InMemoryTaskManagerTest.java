@@ -1,9 +1,6 @@
 package taskmanager.app.service.manager;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import taskmanager.app.entity.Epic;
 import taskmanager.app.entity.StatusTask;
 import taskmanager.app.entity.SubTask;
@@ -25,11 +22,19 @@ import static org.junit.jupiter.api.Assertions.*;
 class InMemoryTaskManagerTest {
     private TaskManager taskManager;
     private InMemoryHistoryManager historyManager;
+    private TestInfo testInfo;
 
     @BeforeEach
-    void setUp() {
+    void setUp(TestInfo testInfo) {
+        this.testInfo = testInfo;
+        System.out.printf("🚀 Подготовка теста: %s%n", testInfo.getDisplayName());
         taskManager = new InMemoryTaskManager();
         historyManager = new InMemoryHistoryManager();
+    }
+
+    @AfterEach
+    void tearDown() {
+        System.out.printf("✅ Тест завершен: %s%n%n", testInfo.getDisplayName());
     }
 
     @Nested

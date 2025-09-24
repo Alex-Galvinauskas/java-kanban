@@ -137,7 +137,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     Epic epic = new Epic(id, name, description);
                     epic.setStartTime(startTime);
                     epic.setDuration(duration);
-                    epic.setEndTime(endTime);
                     return epic;
                 case SUBTASK:
                     if (fields.size() < MIN_FIELDS_FOR_SUBTASK || fields.get(FIELD_INDEX_EPIC_ID).isEmpty()) {

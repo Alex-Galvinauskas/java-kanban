@@ -1,9 +1,6 @@
 package taskmanager.app.service.time;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import taskmanager.app.entity.Task;
 
 import java.time.Duration;
@@ -16,13 +13,22 @@ class TimeSlotServiceTest {
 
     private TimeManagerService timeManagerService;
     private Task testTask;
+    private TestInfo testInfo;
 
     @BeforeEach
-    void setUp() {
+    void setUp(TestInfo testInfo) {
+        this.testInfo = testInfo;
+        System.out.printf("🚀 Подготовка теста: %s%n", testInfo.getDisplayName());
+
         timeManagerService = new TimeManagerService();
         testTask = new Task(1, "Test Task", "Description", null,
                 Duration.ofHours(2),
                 LocalDateTime.of(2025, 9, 8, 10, 0));
+    }
+
+    @AfterEach
+    void tearDown() {
+        System.out.printf("✅ Тест завершен: %s%n%n", testInfo.getDisplayName());
     }
 
     @Nested

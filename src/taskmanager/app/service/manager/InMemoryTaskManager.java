@@ -42,12 +42,7 @@ public class InMemoryTaskManager implements TaskManager {
      * Возвращает задачи в порядке приоритета (по startTime)
      */
     public List<Task> getPrioritizedTasks() {
-        return prioritizedTasks.stream()
-                .sorted(Comparator.comparing(
-                        Task::getStartTime,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ).thenComparing(Task::getId))
-                .collect(Collectors.toList());
+        return new ArrayList<>(prioritizedTasks);
     }
 
     /**
@@ -82,7 +77,7 @@ public class InMemoryTaskManager implements TaskManager {
                     earliestStart = subtask.getStartTime();
                 }
 
-                LocalDateTime subtaskEnd = subtask.getEndTime();
+                LocalDateTime subtaskEnd = subtask.getStartTime().plus(subtask.getDuration());
                 if (latestEnd == null || subtaskEnd.isAfter(latestEnd)) {
                     latestEnd = subtaskEnd;
                 }
@@ -101,7 +96,6 @@ public class InMemoryTaskManager implements TaskManager {
         } else {
             epic.setStartTime(null);
             epic.setDuration(null);
-            epic.setEndTime(null);
         }
     }
 
@@ -386,6 +380,11 @@ public class InMemoryTaskManager implements TaskManager {
                             .collect(Collectors.toList());
                 })
                 .orElse(Collections.emptyList());
+    }
+
+    @Override
+    public List<SubTask> getEpicSubtasks(int epicId) {
+        return List.of();
     }
 
     /**
