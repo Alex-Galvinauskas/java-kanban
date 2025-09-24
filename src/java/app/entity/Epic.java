@@ -1,7 +1,6 @@
 package java.app.entity;
 
 import java.app.exception.ValidationException;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;

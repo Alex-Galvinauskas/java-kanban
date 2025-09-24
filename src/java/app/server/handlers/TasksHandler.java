@@ -3,9 +3,9 @@ package java.app.server.handlers;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
+
 import java.app.entity.Task;
 import java.app.management.TaskManager;
-
 import java.io.IOException;
 import java.util.Optional;
 

@@ -1,10 +1,7 @@
 package java.app.service.manager;
 
-import taskmanager.app.entity.*;
-
 import java.app.entity.*;
 import java.app.exception.ManagerSaveException;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;

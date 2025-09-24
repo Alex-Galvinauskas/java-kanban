@@ -2,12 +2,10 @@ package java.app.service.manager;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
-import taskmanager.app.entity.*;
 
 import java.app.entity.*;
 import java.app.exception.ManagerSaveException;
 import java.app.management.TaskManager;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
