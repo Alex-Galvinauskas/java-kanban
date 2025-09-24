@@ -22,19 +22,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Тесты для обработчика задач")
 class TasksHandlerTest {
+    private static final AtomicInteger PORT_COUNTER = new AtomicInteger(8081);
+    private static final String BASE_URL = "http://localhost:";
     private TaskManager manager;
     private HttpTaskServer taskServer;
     private Gson gson;
     private HttpClient client;
     private TestInfo testInfo;
     private int port;
-
-    private static final AtomicInteger PORT_COUNTER = new AtomicInteger(8081);
-    private static final String BASE_URL = "http://localhost:";
 
     @BeforeEach
     void setUp(TestInfo testInfo) throws IOException {
@@ -57,10 +56,6 @@ class TasksHandlerTest {
         System.out.printf("✅ Тест завершен: %s%n%n", testInfo.getDisplayName());
     }
 
-    private String getUrl(String path) {
-        return BASE_URL + port + path;
-    }
-
     @Test
     @DisplayName("Добавление задачи")
     void testAddTask() throws IOException, InterruptedException {
@@ -79,11 +74,16 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(201);
+        assertEquals(201, response.statusCode());
 
         List<Task> tasksFromManager = manager.getAllTasks();
-        assertThat(tasksFromManager).isNotNull().hasSize(1);
-        assertThat(tasksFromManager.getFirst().getName()).isEqualTo("Test Task");
+        assertNotNull(tasksFromManager);
+        assertEquals(1, tasksFromManager.size());
+        assertEquals("Test Task", tasksFromManager.getFirst().getName());
+    }
+
+    private String getUrl(String path) {
+        return BASE_URL + port + path;
     }
 
     @Test
@@ -103,13 +103,13 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(200);
+        assertEquals(200, response.statusCode());
 
         Task responseTask = gson.fromJson(response.body(), Task.class);
-        assertThat(responseTask).isNotNull();
-        assertThat(responseTask.getId()).isEqualTo(taskId);
-        assertThat(responseTask.getName()).isEqualTo("Test Task");
-        assertThat(responseTask.getDescription()).isEqualTo("Description");
+        assertNotNull(responseTask);
+        assertEquals(taskId, responseTask.getId());
+        assertEquals("Test Task", responseTask.getName());
+        assertEquals("Description", responseTask.getDescription());
     }
 
     @Test
@@ -130,12 +130,13 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(200);
+        assertEquals(200, response.statusCode());
 
         Task[] tasks = gson.fromJson(response.body(), Task[].class);
-        assertThat(tasks).hasSize(2);
-        assertThat(tasks).extracting(Task::getName)
-                .containsExactly("Task 1", "Task 2");
+        assertNotNull(tasks);
+        assertEquals(2, tasks.length);
+        assertEquals("Task 1", tasks[0].getName());
+        assertEquals("Task 2", tasks[1].getName());
     }
 
     @Test
@@ -160,13 +161,16 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(200);
+        assertEquals(200, response.statusCode());
 
-        Task taskFromManager = manager.getTaskById(taskId).orElseThrow();
-        assertThat(taskFromManager.getName()).isEqualTo("Updated Task");
-        assertThat(taskFromManager.getDescription()).isEqualTo("Updated Description");
-        assertThat(taskFromManager.getStatus()).isEqualTo(StatusTask.DONE);
-        assertThat(taskFromManager.getDuration()).isEqualTo(Duration.ofMinutes(10));
+        Optional<Task> taskFromManagerOpt = manager.getTaskById(taskId);
+        assertTrue(taskFromManagerOpt.isPresent());
+
+        Task taskFromManager = taskFromManagerOpt.get();
+        assertEquals("Updated Task", taskFromManager.getName());
+        assertEquals("Updated Description", taskFromManager.getDescription());
+        assertEquals(StatusTask.DONE, taskFromManager.getStatus());
+        assertEquals(Duration.ofMinutes(10), taskFromManager.getDuration());
     }
 
     @Test
@@ -177,7 +181,7 @@ class TasksHandlerTest {
                 "Description", StatusTask.NEW,
                 Duration.ofMinutes(5), LocalDateTime.now());
         int taskId = manager.createTask(task);
-        assertThat(manager.getAllTasks()).hasSize(1);
+        assertEquals(1, manager.getAllTasks().size());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/tasks/" + taskId)))
@@ -188,9 +192,9 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(204);
-        assertThat(manager.getAllTasks()).isEmpty();
-        assertThat(manager.getTaskById(taskId)).isEmpty();
+        assertEquals(204, response.statusCode());
+        assertTrue(manager.getAllTasks().isEmpty());
+        assertFalse(manager.getTaskById(taskId).isPresent());
     }
 
     @Test
@@ -201,7 +205,7 @@ class TasksHandlerTest {
                 StatusTask.NEW, Duration.ofMinutes(5), LocalDateTime.now()));
         manager.createTask(new Task(manager.generateId(), "Task 2", "Desc 2",
                 StatusTask.NEW, Duration.ofMinutes(10), LocalDateTime.now().plusHours(1)));
-        assertThat(manager.getAllTasks()).hasSize(2);
+        assertEquals(2, manager.getAllTasks().size());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/tasks")))
@@ -212,8 +216,8 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(204);
-        assertThat(manager.getAllTasks()).isEmpty();
+        assertEquals(204, response.statusCode());
+        assertTrue(manager.getAllTasks().isEmpty());
     }
 
     @Test
@@ -229,8 +233,8 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(404);
-        assertThat(response.body()).contains("не найдена");
+        assertEquals(404, response.statusCode());
+        assertTrue(response.body().contains("не найдена"));
     }
 
     @Test
@@ -249,7 +253,7 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
     }
 
     @Test
@@ -270,11 +274,11 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
 
         JsonObject jsonResponse = gson.fromJson(response.body(), JsonObject.class);
-        assertThat(jsonResponse.has("error")).isTrue();
-        assertThat(jsonResponse.get("error").getAsString()).contains("не существует");
+        assertTrue(jsonResponse.has("error"));
+        assertTrue(jsonResponse.get("error").getAsString().contains("не существует"));
     }
 
     @Test
@@ -292,8 +296,8 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(204);
-        assertThat(response.body()).isEmpty();
+        assertEquals(204, response.statusCode());
+        assertTrue(response.body().isEmpty());
     }
 
     @Test
@@ -319,14 +323,15 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(406);
+        assertEquals(406, response.statusCode());
 
         JsonObject jsonResponse = gson.fromJson(response.body(), JsonObject.class);
-        assertThat(jsonResponse.has("error")).isTrue();
+        assertTrue(jsonResponse.has("error"));
 
         String errorMessage = jsonResponse.get("error").getAsString().toLowerCase();
-        assertThat(errorMessage).containsAnyOf("пересекается", "конфликт", "conflict", "время");
-        assertThat(errorMessage).contains("conflicting task");
+        assertTrue(errorMessage.contains("пересекается") || errorMessage.contains("конфликт") ||
+                errorMessage.contains("conflict") || errorMessage.contains("время"));
+        assertTrue(errorMessage.contains("conflicting task"));
     }
 
     @Test
@@ -342,7 +347,7 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
     }
 
     @Test
@@ -359,8 +364,8 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
-        assertThat(response.body()).contains("некорректный JSON формат");
+        assertEquals(400, response.statusCode());
+        assertTrue(response.body().contains("некорректный JSON формат"));
     }
 
     @Test
@@ -368,11 +373,11 @@ class TasksHandlerTest {
     void testCreateTaskWithMinimumFields() throws IOException, InterruptedException {
         // Given
         String minimalTaskJson = """
-            {
-                "name": "Минимальная задача",
-                "status": "NEW"
-            }
-            """;
+                {
+                    "name": "Минимальная задача",
+                    "status": "NEW"
+                }
+                """;
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/tasks")))
@@ -384,11 +389,11 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(201);
+        assertEquals(201, response.statusCode());
 
         List<Task> tasks = manager.getAllTasks();
-        assertThat(tasks).hasSize(1);
-        assertThat(tasks.getFirst().getName()).isEqualTo("Минимальная задача");
+        assertEquals(1, tasks.size());
+        assertEquals("Минимальная задача", tasks.getFirst().getName());
     }
 
     @Test
@@ -396,11 +401,11 @@ class TasksHandlerTest {
     void testCreateTaskWithInvalidData() throws IOException, InterruptedException {
         // Given
         String invalidDateJson = """
-            {
-                "name": "Test Task",
-                "startTime": "invalid-date-format"
-            }
-            """;
+                {
+                    "name": "Test Task",
+                    "startTime": "invalid-date-format"
+                }
+                """;
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/tasks")))
@@ -412,12 +417,13 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
 
         JsonObject jsonResponse = gson.fromJson(response.body(), JsonObject.class);
-        assertThat(jsonResponse.has("error")).isTrue();
-        assertThat(jsonResponse.get("error").getAsString())
-                .containsAnyOf("could not be parsed", "дата", "формат");
+        assertTrue(jsonResponse.has("error"));
+        String errorMessage = jsonResponse.get("error").getAsString();
+        assertTrue(errorMessage.contains("could not be parsed") || errorMessage.contains("дата") ||
+                errorMessage.contains("формат"));
     }
 
     @Test
@@ -433,7 +439,7 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
     }
 
     @Test
@@ -449,11 +455,11 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
 
         JsonObject jsonResponse = gson.fromJson(response.body(), JsonObject.class);
-        assertThat(jsonResponse.has("error")).isTrue();
-        assertThat(jsonResponse.get("error").getAsString()).isNotNull();
+        assertTrue(jsonResponse.has("error"));
+        assertNotNull(jsonResponse.get("error").getAsString());
     }
 
     @Test
@@ -461,12 +467,12 @@ class TasksHandlerTest {
     void testCreateTaskWithSpecialCharacters() throws IOException, InterruptedException {
         // Given
         String taskWithSpecialChars = """
-            {
-                "name": "Задача с спец. символами: \\"<>{}[]&@#",
-                "description": "Описание с \\\\n переносами и \\\\t табуляциями",
-                "status": "NEW"
-            }
-            """;
+                {
+                    "name": "Задача с спец. символами: \\"<>{}[]&@#",
+                    "description": "Описание с \\\\n переносами и \\\\t табуляциями",
+                    "status": "NEW"
+                }
+                """;
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/tasks")))
@@ -478,10 +484,10 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(201);
+        assertEquals(201, response.statusCode());
 
         Task createdTask = gson.fromJson(response.body(), Task.class);
-        assertThat(createdTask.getName()).contains("спец. символами");
+        assertTrue(createdTask.getName().contains("спец. символами"));
     }
 
     @Test
@@ -506,11 +512,11 @@ class TasksHandlerTest {
         long endTime = System.currentTimeMillis();
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(200);
+        assertEquals(200, response.statusCode());
 
         Task[] tasks = gson.fromJson(response.body(), Task[].class);
-        assertThat(tasks).hasSize(100);
-        assertThat(endTime - startTime).isLessThan(1000);
+        assertEquals(100, tasks.length);
+        assertTrue(endTime - startTime < 1000);
     }
 
     @Test
@@ -530,11 +536,11 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(200);
+        assertEquals(200, response.statusCode());
 
         Optional<String> contentType = response.headers().firstValue("Content-Type");
-        assertThat(contentType).isPresent();
-        assertThat(contentType.get()).contains("application/json");
+        assertTrue(contentType.isPresent());
+        assertTrue(contentType.get().contains("application/json"));
     }
 
     @Test
@@ -542,13 +548,13 @@ class TasksHandlerTest {
     void testCreateTaskWithEdgeCaseDates() throws IOException, InterruptedException {
         // Given
         String farFutureTaskJson = """
-            {
-                "name": "Задача в далеком будущем",
-                "status": "NEW",
-                "startTime": "2100-01-01T00:00:00",
-                "duration": 1440
-            }
-            """;
+                {
+                    "name": "Задача в далеком будущем",
+                    "status": "NEW",
+                    "startTime": "2100-01-01T00:00:00",
+                    "duration": 1440
+                }
+                """;
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/tasks")))
@@ -560,7 +566,7 @@ class TasksHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isIn(201, 400);
+        assertTrue(response.statusCode() == 201 || response.statusCode() == 400);
     }
 
     @Test
@@ -627,11 +633,11 @@ class TasksHandlerTest {
 
         // Then
         if (response.statusCode() == 406) {
-            assertThat(response.body().toLowerCase()).contains("пересекается");
+            assertTrue(response.body().toLowerCase().contains("пересекается"));
         } else if (response.statusCode() == 400) {
             JsonObject jsonResponse = gson.fromJson(response.body(), JsonObject.class);
-            assertThat(jsonResponse.has("error")).isTrue();
-            assertThat(manager.getAllTasks()).hasSize(1);
+            assertTrue(jsonResponse.has("error"));
+            assertEquals(1, manager.getAllTasks().size());
         }
     }
 }

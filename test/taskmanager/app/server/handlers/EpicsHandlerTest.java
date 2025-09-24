@@ -19,19 +19,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Тесты для обработчика эпиков")
 class EpicsHandlerTest {
+    private static final AtomicInteger PORT_COUNTER = new AtomicInteger(8181);
+    private static final String BASE_URL = "http://localhost:";
     private TaskManager manager;
     private HttpTaskServer taskServer;
     private Gson gson;
     private HttpClient client;
     private TestInfo testInfo;
     private int port;
-
-    private static final AtomicInteger PORT_COUNTER = new AtomicInteger(8181);
-    private static final String BASE_URL = "http://localhost:";
 
     @BeforeEach
     void setUp(TestInfo testInfo) throws IOException {
@@ -54,10 +53,6 @@ class EpicsHandlerTest {
         System.out.printf("✅ Тест завершен: %s%n%n", testInfo.getDisplayName());
     }
 
-    private String getUrl(String path) {
-        return BASE_URL + port + path;
-    }
-
     @Test
     @DisplayName("Создание эпика")
     void testCreateEpic() throws IOException, InterruptedException {
@@ -75,15 +70,19 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(201);
+        assertEquals(201, response.statusCode());
 
         List<Epic> epics = manager.getAllEpics();
-        assertThat(epics).hasSize(1);
+        assertEquals(1, epics.size());
 
-        Epic createdEpic = epics.getFirst();
-        assertThat(createdEpic.getName()).isEqualTo("Test Epic");
-        assertThat(createdEpic.getDescription()).isEqualTo("Test Description");
-        assertThat(createdEpic.getStatus()).isEqualTo(StatusTask.NEW);
+        Epic createdEpic = epics.get(0);
+        assertEquals("Test Epic", createdEpic.getName());
+        assertEquals("Test Description", createdEpic.getDescription());
+        assertEquals(StatusTask.NEW, createdEpic.getStatus());
+    }
+
+    private String getUrl(String path) {
+        return BASE_URL + port + path;
     }
 
     @Test
@@ -102,14 +101,15 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(200);
+        assertEquals(200, response.statusCode());
 
         Epic responseEpic = gson.fromJson(response.body(), Epic.class);
-        assertThat(responseEpic).isNotNull();
-        assertThat(responseEpic.getId()).isEqualTo(epicId);
-        assertThat(responseEpic.getName()).isEqualTo("Epic with Subtasks");
-        assertThat(responseEpic.getDescription()).isEqualTo("Description");
-        assertThat(responseEpic.getSubTaskIds()).isNotNull().isEmpty();
+        assertNotNull(responseEpic);
+        assertEquals(epicId, responseEpic.getId());
+        assertEquals("Epic with Subtasks", responseEpic.getName());
+        assertEquals("Description", responseEpic.getDescription());
+        assertNotNull(responseEpic.getSubTaskIds());
+        assertTrue(responseEpic.getSubTaskIds().isEmpty());
     }
 
     @Test
@@ -138,14 +138,14 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(200);
+        assertEquals(200, response.statusCode());
 
         Epic responseEpic = gson.fromJson(response.body(), Epic.class);
-        assertThat(responseEpic).isNotNull();
-        assertThat(responseEpic.getId()).isEqualTo(epicId);
-        assertThat(responseEpic.getName()).isEqualTo("Epic with Subtasks");
-        assertThat(responseEpic.getSubTaskIds()).hasSize(2);
-        assertThat(responseEpic.getStatus()).isEqualTo(StatusTask.IN_PROGRESS);
+        assertNotNull(responseEpic);
+        assertEquals(epicId, responseEpic.getId());
+        assertEquals("Epic with Subtasks", responseEpic.getName());
+        assertEquals(2, responseEpic.getSubTaskIds().size());
+        assertEquals(StatusTask.IN_PROGRESS, responseEpic.getStatus());
     }
 
     @Test
@@ -165,12 +165,13 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(200);
+        assertEquals(200, response.statusCode());
 
         Epic[] epics = gson.fromJson(response.body(), Epic[].class);
-        assertThat(epics).hasSize(3);
-        assertThat(epics).extracting(Epic::getName)
-                .containsExactly("Epic 1", "Epic 2", "Epic 3");
+        assertEquals(3, epics.length);
+        assertEquals("Epic 1", epics[0].getName());
+        assertEquals("Epic 2", epics[1].getName());
+        assertEquals("Epic 3", epics[2].getName());
     }
 
     @Test
@@ -179,7 +180,7 @@ class EpicsHandlerTest {
         // Given
         Epic epic = new Epic("Epic to delete", "Description");
         int epicId = manager.createEpic(epic);
-        assertThat(manager.getAllEpics()).hasSize(1);
+        assertEquals(1, manager.getAllEpics().size());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/epics/" + epicId)))
@@ -190,9 +191,9 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(204);
-        assertThat(manager.getAllEpics()).isEmpty();
-        assertThat(manager.getEpicById(epicId)).isEmpty();
+        assertEquals(204, response.statusCode());
+        assertTrue(manager.getAllEpics().isEmpty());
+        assertTrue(manager.getEpicById(epicId).isEmpty());
     }
 
     @Test
@@ -207,8 +208,8 @@ class EpicsHandlerTest {
                 LocalDateTime.now(), epicId);
         manager.createSubTask(subTask);
 
-        assertThat(manager.getAllEpics()).hasSize(1);
-        assertThat(manager.getAllSubTasks()).hasSize(1);
+        assertEquals(1, manager.getAllEpics().size());
+        assertEquals(1, manager.getAllSubTasks().size());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/epics/" + epicId)))
@@ -219,9 +220,9 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(204);
-        assertThat(manager.getAllEpics()).isEmpty();
-        assertThat(manager.getAllSubTasks()).isEmpty();
+        assertEquals(204, response.statusCode());
+        assertTrue(manager.getAllEpics().isEmpty());
+        assertTrue(manager.getAllSubTasks().isEmpty());
     }
 
     @Test
@@ -237,8 +238,8 @@ class EpicsHandlerTest {
                 LocalDateTime.now(), epicId);
         manager.createSubTask(subTask);
 
-        assertThat(manager.getAllEpics()).hasSize(3);
-        assertThat(manager.getAllSubTasks()).hasSize(1);
+        assertEquals(3, manager.getAllEpics().size());
+        assertEquals(1, manager.getAllSubTasks().size());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/epics")))
@@ -249,9 +250,9 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(204);
-        assertThat(manager.getAllEpics()).isEmpty();
-        assertThat(manager.getAllSubTasks()).isEmpty();
+        assertEquals(204, response.statusCode());
+        assertTrue(manager.getAllEpics().isEmpty());
+        assertTrue(manager.getAllSubTasks().isEmpty());
     }
 
     @Test
@@ -267,8 +268,8 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(404);
-        assertThat(response.body()).contains("не найден");
+        assertEquals(404, response.statusCode());
+        assertTrue(response.body().contains("не найден"));
     }
 
     @Test
@@ -287,7 +288,7 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
     }
 
     @Test
@@ -295,10 +296,10 @@ class EpicsHandlerTest {
     void testCreateEpicWithInvalidData() throws IOException, InterruptedException {
         // Given
         String invalidEpicJson = """
-            {
-                "description": "Description without name"
-            }
-            """;
+                {
+                    "description": "Description without name"
+                }
+                """;
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getUrl("/epics")))
@@ -310,7 +311,7 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
     }
 
     @Test
@@ -326,7 +327,7 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(404);
+        assertEquals(404, response.statusCode());
     }
 
     @Test
@@ -342,7 +343,7 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
     }
 
     @Test
@@ -358,6 +359,6 @@ class EpicsHandlerTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Then
-        assertThat(response.statusCode()).isEqualTo(400);
+        assertEquals(400, response.statusCode());
     }
 }

@@ -13,9 +13,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Тесты для BaseHttpHandler")
 class BaseHttpHandlerTest {
@@ -62,7 +60,7 @@ class BaseHttpHandlerTest {
             String actualBody = handler.readRequestBody(stubExchange);
 
             // Then
-            assertThat(actualBody).isEqualTo(expectedBody);
+            assertEquals(expectedBody, actualBody);
         }
 
         @Test
@@ -98,159 +96,23 @@ class BaseHttpHandlerTest {
                 stubExchange.setRequestBody(inputStream);
 
                 // When & Then
-                assertThatThrownBy(() -> handler.readRequestBody(stubExchange))
-                        .isInstanceOf(IOException.class)
-                        .hasMessage("Read error");
+                IOException exception = assertThrows(IOException.class,
+                        () -> handler.readRequestBody(stubExchange));
+                assertEquals("Read error", exception.getMessage());
             } catch (IOException e) {
                 fail("Unexpected IOException during stream closing: " + e.getMessage());
             }
         }
 
-        @Nested
-        @DisplayName("Отправка ответов")
-        class SendResponseTest {
-
-            private ByteArrayOutputStream outputStream;
-            private StubHttpExchange stubExchange;
-
-            @BeforeEach
-            void setUp() {
-                outputStream = new ByteArrayOutputStream();
-                stubExchange = new StubHttpExchange();
-                stubExchange.setResponseBody(outputStream);
-            }
-
-            @Test
-            @DisplayName("Должен отправлять текстовый ответ с корректными заголовками")
-            void shouldSendTextResponse() throws IOException {
-                // Given
-                String response = "test response";
-                int statusCode = 200;
-
-                // When
-                handler.sendText(stubExchange, response, statusCode);
-
-                // Then
-                assertThat(stubExchange.getResponseCode()).isEqualTo(statusCode);
-                assertThat(stubExchange.getResponseLength()).isEqualTo(response.getBytes().length);
-                assertThat(outputStream.toString()).isEqualTo(response);
-            }
-
-            @Test
-            @DisplayName("Должен отправлять успешный ответ")
-            void shouldSendSuccessResponse() throws IOException {
-                // Given
-                TestObject testObject = new TestObject();
-
-                // When
-                handler.sendSuccess(stubExchange, testObject);
-
-                // Then
-                assertThat(stubExchange.getResponseCode()).isEqualTo(200);
-                assertThat(outputStream.toString()).isEqualTo(gson.toJson(testObject));
-            }
-
-            @Test
-            @DisplayName("Должен отправлять ответ 201 Created")
-            void shouldSendCreatedResponse() throws IOException {
-                // Given
-                TestObject testObject = new TestObject();
-
-                // When
-                handler.sendCreated(stubExchange, testObject);
-
-                // Then
-                assertThat(stubExchange.getResponseCode()).isEqualTo(201);
-                assertThat(outputStream.toString()).isEqualTo(gson.toJson(testObject));
-            }
-
-            @Test
-            @DisplayName("Должен отправлять ответ 404 Not Found")
-            void shouldSendNotFoundResponse() throws IOException {
-                // Given
-                String errorMessage = "Resource not found";
-
-                // When
-                handler.sendNotFound(stubExchange, errorMessage);
-
-                // Then
-                assertThat(stubExchange.getResponseCode()).isEqualTo(404);
-                assertThat(outputStream.toString()).contains(errorMessage);
-            }
-
-            @Test
-            @DisplayName("Должен отправлять ответ 204 No Content")
-            void shouldSendNoContentResponse() throws IOException {
-                // When
-                handler.sendNoContent(stubExchange);
-
-                // Then
-                assertThat(stubExchange.getResponseCode()).isEqualTo(204);
-                assertThat(stubExchange.getResponseLength()).isEqualTo(-1);
-                assertThat(stubExchange.isResponseBodyAccessed()).isFalse();
-            }
-        }
-
-        @Nested
-        @DisplayName("Извлечение параметров пути")
-        class PathParameterTest {
-
-            @Test
-            @DisplayName("Должен извлекать параметр по индексу")
-            void shouldExtractPathParameter() {
-                // Given
-                URI uri = URI.create("http://localhost:8080/tasks/123");
-                StubHttpExchange stubExchange = new StubHttpExchange();
-                stubExchange.setRequestURI(uri);
-
-                // When
-                String param = handler.getPathParameter(stubExchange, 1);
-
-                // Then
-                assertThat(param).isEqualTo("123");
-            }
-
-            @Test
-            @DisplayName("Должен возвращать null для несуществующего индекса")
-            void shouldReturnNullForNonExistentIndex() {
-                // Given
-                URI uri = URI.create("http://localhost:8080/tasks");
-                StubHttpExchange stubExchange = new StubHttpExchange();
-                stubExchange.setRequestURI(uri);
-
-                // When
-                String param = handler.getPathParameter(stubExchange, 1);
-
-                // Then
-                assertThat(param).isNull();
-            }
-        }
-
         private static class StubHttpExchange extends HttpExchange {
+            private final Headers responseHeaders = new Headers();
+            private final Headers requestHeaders = new Headers();
             private InputStream requestBody;
             private ByteArrayOutputStream responseBody;
             private URI requestURI;
             private int responseCode;
             private long responseLength;
             private boolean responseBodyAccessed = false;
-            private final Headers responseHeaders = new Headers();
-            private final Headers requestHeaders = new Headers();
-
-            public void setRequestBody(InputStream requestBody) {
-                this.requestBody = requestBody;
-            }
-
-            public void setResponseBody(ByteArrayOutputStream responseBody) {
-                this.responseBody = responseBody;
-            }
-
-            public void setRequestURI(URI requestURI) {
-                this.requestURI = requestURI;
-            }
-
-            public int getResponseCode() {
-                return responseCode;
-            }
 
             public long getResponseLength() {
                 return responseLength;
@@ -275,6 +137,10 @@ class BaseHttpHandlerTest {
                 return requestURI;
             }
 
+            public void setRequestURI(URI requestURI) {
+                this.requestURI = requestURI;
+            }
+
             @Override
             public String getRequestMethod() {
                 return "GET";
@@ -294,10 +160,18 @@ class BaseHttpHandlerTest {
                 return requestBody;
             }
 
+            public void setRequestBody(InputStream requestBody) {
+                this.requestBody = requestBody;
+            }
+
             @Override
             public ByteArrayOutputStream getResponseBody() {
                 responseBodyAccessed = true;
                 return responseBody;
+            }
+
+            public void setResponseBody(ByteArrayOutputStream responseBody) {
+                this.responseBody = responseBody;
             }
 
             @Override
@@ -309,6 +183,10 @@ class BaseHttpHandlerTest {
             @Override
             public InetSocketAddress getRemoteAddress() {
                 return null;
+            }
+
+            public int getResponseCode() {
+                return responseCode;
             }
 
             @Override
@@ -341,10 +219,128 @@ class BaseHttpHandlerTest {
         }
 
         private static class TestObject {
-
             public TestObject() {
             }
+        }
 
+        @Nested
+        @DisplayName("Отправка ответов")
+        class SendResponseTest {
+
+            private ByteArrayOutputStream outputStream;
+            private StubHttpExchange stubExchange;
+
+            @BeforeEach
+            void setUp() {
+                outputStream = new ByteArrayOutputStream();
+                stubExchange = new StubHttpExchange();
+                stubExchange.setResponseBody(outputStream);
+            }
+
+            @Test
+            @DisplayName("Должен отправлять текстовый ответ с корректными заголовками")
+            void shouldSendTextResponse() throws IOException {
+                // Given
+                String response = "test response";
+                int statusCode = 200;
+
+                // When
+                handler.sendText(stubExchange, response, statusCode);
+
+                // Then
+                assertEquals(statusCode, stubExchange.getResponseCode());
+                assertEquals(response.getBytes().length, stubExchange.getResponseLength());
+                assertEquals(response, outputStream.toString());
+            }
+
+            @Test
+            @DisplayName("Должен отправлять успешный ответ")
+            void shouldSendSuccessResponse() throws IOException {
+                // Given
+                TestObject testObject = new TestObject();
+
+                // When
+                handler.sendSuccess(stubExchange, testObject);
+
+                // Then
+                assertEquals(200, stubExchange.getResponseCode());
+                assertEquals(gson.toJson(testObject), outputStream.toString());
+            }
+
+            @Test
+            @DisplayName("Должен отправлять ответ 201 Created")
+            void shouldSendCreatedResponse() throws IOException {
+                // Given
+                TestObject testObject = new TestObject();
+
+                // When
+                handler.sendCreated(stubExchange, testObject);
+
+                // Then
+                assertEquals(201, stubExchange.getResponseCode());
+                assertEquals(gson.toJson(testObject), outputStream.toString());
+            }
+
+            @Test
+            @DisplayName("Должен отправлять ответ 404 Not Found")
+            void shouldSendNotFoundResponse() throws IOException {
+                // Given
+                String errorMessage = "Resource not found";
+
+                // When
+                handler.sendNotFound(stubExchange, errorMessage);
+
+                // Then
+                assertEquals(404, stubExchange.getResponseCode());
+                assertTrue(outputStream.toString().contains(errorMessage));
+            }
+
+            @Test
+            @DisplayName("Должен отправлять ответ 204 No Content")
+            void shouldSendNoContentResponse() throws IOException {
+                // When
+                handler.sendNoContent(stubExchange);
+
+                // Then
+                assertEquals(204, stubExchange.getResponseCode());
+                assertEquals(-1, stubExchange.getResponseLength());
+                assertFalse(stubExchange.isResponseBodyAccessed());
+            }
+        }
+
+        @Nested
+        @DisplayName("Извлечение параметров пути")
+        class PathParameterTest {
+
+            @Test
+            @DisplayName("Должен извлекать параметр по индексу")
+            void shouldExtractPathParameter() {
+                // Given
+                URI uri = URI.create("http://localhost:8080/tasks/123");
+                StubHttpExchange stubExchange = new StubHttpExchange();
+                stubExchange.setRequestURI(uri);
+
+                // When
+                String param = handler.getPathParameter(stubExchange, 1);
+
+                // Then
+                assertEquals("123", param);
+            }
+
+            @Test
+            @DisplayName("Должен возвращать null для несуществующего индекса")
+            void shouldReturnNullForNonExistentIndex() {
+                // Given
+                URI uri = URI.create("http://localhost:8080/tasks");
+                StubHttpExchange stubExchange = new StubHttpExchange();
+                stubExchange.setRequestURI(uri);
+
+                // When
+                String param = handler.getPathParameter(stubExchange, 1);
+
+                // Then
+                assertNull(param);
+            }
         }
     }
 }
