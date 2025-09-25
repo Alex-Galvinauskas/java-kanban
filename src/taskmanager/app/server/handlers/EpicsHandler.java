@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import taskmanager.app.entity.Epic;
 import taskmanager.app.entity.SubTask;
+import taskmanager.app.exception.NotFoundException;
 import taskmanager.app.management.TaskManager;
 
 import java.io.IOException;
@@ -81,15 +82,12 @@ public class EpicsHandler extends BaseHttpHandler {
         } else {
             try {
                 int id = Integer.parseInt(idParam);
-                Optional<Epic> epic = taskManager.getEpicById(id);
-
-                if (epic.isPresent()) {
-                    sendSuccess(exchange, epic.get());
-                } else {
-                    sendNotFound(exchange, "Эпик с ID " + id + " не найден");
-                }
+                Epic epic = taskManager.getEpicById(id);
+                sendSuccess(exchange, epic);
             } catch (NumberFormatException e) {
                 sendBadRequest(exchange, "Неверный формат ID эпика");
+            } catch (NotFoundException e) {
+                sendNotFound(exchange, e.getMessage());
             }
         }
     }
@@ -113,18 +111,15 @@ public class EpicsHandler extends BaseHttpHandler {
             }
 
             int epicId = Integer.parseInt(pathParts[2]);
-            Optional<Epic> epic = taskManager.getEpicById(epicId);
+            Epic epic = taskManager.getEpicById(epicId);
 
-            if (epic.isEmpty()) {
-                sendNotFound(exchange, "Эпик с ID " + epicId + " не найден");
-                return;
-            }
-
-            List<SubTask> subtasks = taskManager.getEpicSubtasks(epicId);
+            List<SubTask> subtasks = taskManager.getSubTasksByEpicId(epicId);
             sendSuccess(exchange, subtasks);
 
         } catch (NumberFormatException e) {
             sendBadRequest(exchange, "Неверный формат ID эпика");
+        } catch (NotFoundException e) {
+            sendNotFound(exchange, e.getMessage());
         } catch (Exception e) {
             sendInternalError(exchange, "Ошибка при получении подзадач эпика: " + e.getMessage());
         }
@@ -190,7 +185,7 @@ public class EpicsHandler extends BaseHttpHandler {
                 sendNoContent(exchange);
             } catch (NumberFormatException e) {
                 sendBadRequest(exchange, "Неверный формат ID эпика");
-            } catch (IllegalArgumentException e) {
+            } catch (NotFoundException e) {
                 sendNotFound(exchange, e.getMessage());
             }
         }

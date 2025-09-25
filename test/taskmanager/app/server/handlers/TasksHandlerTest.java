@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import org.junit.jupiter.api.*;
 import taskmanager.app.entity.StatusTask;
 import taskmanager.app.entity.Task;
+import taskmanager.app.exception.NotFoundException;
 import taskmanager.app.management.TaskManager;
 import taskmanager.app.server.HttpTaskServer;
 import taskmanager.app.service.manager.InMemoryTaskManager;
@@ -19,7 +20,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -163,10 +163,9 @@ class TasksHandlerTest {
         // Then
         assertEquals(200, response.statusCode());
 
-        Optional<Task> taskFromManagerOpt = manager.getTaskById(taskId);
-        assertTrue(taskFromManagerOpt.isPresent());
+        Task taskFromManager = manager.getTaskById(taskId);
+        assertNotNull(taskFromManager);
 
-        Task taskFromManager = taskFromManagerOpt.get();
         assertEquals("Updated Task", taskFromManager.getName());
         assertEquals("Updated Description", taskFromManager.getDescription());
         assertEquals(StatusTask.DONE, taskFromManager.getStatus());
@@ -194,7 +193,7 @@ class TasksHandlerTest {
         // Then
         assertEquals(204, response.statusCode());
         assertTrue(manager.getAllTasks().isEmpty());
-        assertFalse(manager.getTaskById(taskId).isPresent());
+        assertThrows(NotFoundException.class, () -> manager.getTaskById(taskId));
     }
 
     @Test
@@ -538,9 +537,9 @@ class TasksHandlerTest {
         // Then
         assertEquals(200, response.statusCode());
 
-        Optional<String> contentType = response.headers().firstValue("Content-Type");
-        assertTrue(contentType.isPresent());
-        assertTrue(contentType.get().contains("application/json"));
+        String contentType = response.headers().firstValue("Content-Type").orElse(null);
+        assertNotNull(contentType);
+        assertTrue(contentType.contains("application/json"));
     }
 
     @Test

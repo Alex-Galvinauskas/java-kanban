@@ -5,6 +5,7 @@ import org.junit.jupiter.api.*;
 import taskmanager.app.entity.Epic;
 import taskmanager.app.entity.StatusTask;
 import taskmanager.app.entity.SubTask;
+import taskmanager.app.exception.NotFoundException;
 import taskmanager.app.management.TaskManager;
 import taskmanager.app.server.HttpTaskServer;
 import taskmanager.app.service.manager.InMemoryTaskManager;
@@ -193,7 +194,7 @@ class EpicsHandlerTest {
         // Then
         assertEquals(204, response.statusCode());
         assertTrue(manager.getAllEpics().isEmpty());
-        assertTrue(manager.getEpicById(epicId).isEmpty());
+        assertThrows(NotFoundException.class, () -> manager.getEpicById(epicId));
     }
 
     @Test

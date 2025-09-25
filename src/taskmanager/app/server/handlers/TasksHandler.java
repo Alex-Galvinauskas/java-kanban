@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import taskmanager.app.entity.Task;
+import taskmanager.app.exception.NotFoundException;
 import taskmanager.app.management.TaskManager;
 
 import java.io.IOException;
@@ -73,15 +74,12 @@ public class TasksHandler extends BaseHttpHandler {
         } else {
             try {
                 int id = Integer.parseInt(idParam);
-                Optional<Task> task = taskManager.getTaskById(id);
-
-                if (task.isPresent()) {
-                    sendSuccess(exchange, task.get());
-                } else {
-                    sendNotFound(exchange, "Задача " + id + " не найдена");
-                }
+                Task task = taskManager.getTaskById(id);
+                sendSuccess(exchange, task);
             } catch (NumberFormatException e) {
                 sendBadRequest(exchange, "Неверный формат ID задачи");
+            } catch (NotFoundException e) {
+                sendNotFound(exchange, e.getMessage());
             }
         }
     }
@@ -152,7 +150,7 @@ public class TasksHandler extends BaseHttpHandler {
                 sendNoContent(exchange);
             } catch (NumberFormatException e) {
                 sendBadRequest(exchange, "Неверный формат ID задачи");
-            } catch (IllegalArgumentException e) {
+            } catch (NotFoundException e) {
                 sendNotFound(exchange, e.getMessage());
             }
         }

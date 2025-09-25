@@ -3,6 +3,7 @@ package taskmanager.app.server.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import taskmanager.app.entity.SubTask;
+import taskmanager.app.exception.NotFoundException;
 import taskmanager.app.management.TaskManager;
 
 import java.io.IOException;
@@ -75,15 +76,12 @@ public class SubtasksHandler extends BaseHttpHandler {
         } else {
             try {
                 int id = Integer.parseInt(idParam);
-                Optional<SubTask> subtask = taskManager.getSubTaskById(id);
-
-                if (subtask.isPresent()) {
-                    sendSuccess(exchange, subtask.get());
-                } else {
-                    sendNotFound(exchange, "Подзадача с " + id + " не найдена");
-                }
+                SubTask subtask = taskManager.getSubTaskById(id); // Теперь бросает исключение если не найден
+                sendSuccess(exchange, subtask);
             } catch (NumberFormatException e) {
                 sendBadRequest(exchange, "Неверный формат ID подзадачи");
+            } catch (NotFoundException e) {
+                sendNotFound(exchange, e.getMessage());
             }
         }
     }
@@ -157,7 +155,7 @@ public class SubtasksHandler extends BaseHttpHandler {
                 sendNoContent(exchange);
             } catch (NumberFormatException e) {
                 sendBadRequest(exchange, "Неверный формат ID подзадачи");
-            } catch (IllegalArgumentException e) {
+            } catch (NotFoundException e) {
                 sendNotFound(exchange, e.getMessage());
             }
         }

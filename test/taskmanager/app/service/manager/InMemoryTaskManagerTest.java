@@ -5,6 +5,7 @@ import taskmanager.app.entity.Epic;
 import taskmanager.app.entity.StatusTask;
 import taskmanager.app.entity.SubTask;
 import taskmanager.app.entity.Task;
+import taskmanager.app.exception.NotFoundException;
 import taskmanager.app.management.Managers;
 import taskmanager.app.management.TaskManager;
 import taskmanager.app.service.history.InMemoryHistoryManager;
@@ -14,7 +15,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -103,9 +103,9 @@ class InMemoryTaskManagerTest {
 
             // Then
             assertNotEquals(0, taskId, "ID задачи не должен быть равен 0");
-            Optional<Task> createdTask = taskManager.getTaskById(taskId);
-            assertTrue(createdTask.isPresent());
-            assertEquals(task, createdTask.get());
+            Task createdTask = taskManager.getTaskById(taskId);
+            assertNotNull(createdTask);
+            assertEquals(task, createdTask);
         }
 
         @Test
@@ -121,9 +121,9 @@ class InMemoryTaskManagerTest {
         void testCreateEpic_shouldCreateAndReturnEpicWithId() {
             // Then
             assertNotEquals(0, epicId, "ID эпика не должен быть равен 0");
-            Optional<Epic> createdEpic = taskManager.getEpicById(epicId);
-            assertTrue(createdEpic.isPresent());
-            assertEquals(epic, createdEpic.get());
+            Epic createdEpic = taskManager.getEpicById(epicId);
+            assertNotNull(createdEpic);
+            assertEquals(epic, createdEpic);
         }
 
         @Test
@@ -151,9 +151,9 @@ class InMemoryTaskManagerTest {
             // Then
             assertNotEquals(0, subTaskId, "ID подзадачи не должен быть равен 0");
 
-            Optional<SubTask> createdSubTask = taskManager.getSubTaskById(subTaskId);
-            assertTrue(createdSubTask.isPresent(), "Подзадача должна существовать");
-            assertEquals(subTask, createdSubTask.get(), "Подзадача создана");
+            SubTask createdSubTask = taskManager.getSubTaskById(subTaskId);
+            assertNotNull(createdSubTask, "Подзадача должна существовать");
+            assertEquals(subTask, createdSubTask, "Подзадача создана");
 
             assertTrue(taskManager.getSubTasksByEpicId(epicId).contains(subTask),
                     "Подзадача добавлена в список");
@@ -227,42 +227,39 @@ class InMemoryTaskManagerTest {
         }
 
         @Test
-        @DisplayName("должен возвращаться empty, если задача не найдена")
-        void testGetTaskById_shouldReturnNullWhenTaskNotFound() {
+        @DisplayName("должен бросать исключение, если задача не найдена")
+        void testGetTaskById_shouldThrowExceptionWhenTaskNotFound() {
             // Given
             int invalidId = 999;
 
-            // When
-            Optional<Task> task = taskManager.getTaskById(invalidId);
-
-            // Then
-            assertTrue(task.isEmpty());
+            // When & Then
+            assertThrows(NotFoundException.class, () -> {
+                taskManager.getTaskById(invalidId);
+            });
         }
 
         @Test
-        @DisplayName("Подзадача с несуществующим ID должна возвращаться empty")
-        void testGetSubTaskById_shouldReturnEmptyWhenSubTaskNotFound() {
+        @DisplayName("Подзадача с несуществующим ID должна бросать исключение")
+        void testGetSubTaskById_shouldThrowExceptionWhenSubTaskNotFound() {
             // Given
             int invalidId = 999;
 
-            // When
-            Optional<SubTask> subTask = taskManager.getSubTaskById(invalidId);
-
-            // Then
-            assertTrue(subTask.isEmpty());
+            // When & Then
+            assertThrows(NotFoundException.class, () -> {
+                taskManager.getSubTaskById(invalidId);
+            });
         }
 
         @Test
-        @DisplayName("Эпик с несуществующим ID должен возвращаться empty")
-        void testGetEpicById_shouldReturnNullWhenEpicNotFound() {
+        @DisplayName("Эпик с несуществующим ID должен бросать исключение")
+        void testGetEpicById_shouldThrowExceptionWhenEpicNotFound() {
             // Given
             int invalidId = 999;
 
-            // When
-            Optional<Epic> epic = taskManager.getEpicById(invalidId);
-
-            // Then
-            assertTrue(epic.isEmpty());
+            // When & Then
+            assertThrows(NotFoundException.class, () -> {
+                taskManager.getEpicById(invalidId);
+            });
         }
     }
 
@@ -323,9 +320,11 @@ class InMemoryTaskManagerTest {
             taskManager.updateTask(updatedTask);
 
             // Then
-            Optional<Task> result = taskManager.getTaskById(taskId);
-            assertTrue(result.isPresent());
-            assertEquals(updatedTask, result.get());
+            Task retrievedTask = taskManager.getTaskById(taskId);
+            assertNotNull(retrievedTask);
+            assertEquals("Updated Task 1", retrievedTask.getName());
+            assertEquals("Updated Task 1 description", retrievedTask.getDescription());
+            assertEquals(StatusTask.IN_PROGRESS, retrievedTask.getStatus());
         }
 
         @Test
@@ -350,9 +349,9 @@ class InMemoryTaskManagerTest {
             taskManager.createSubTask(subTask2);
 
             // Then
-            Optional<Epic> epic = taskManager.getEpicById(epicId);
-            assertTrue(epic.isPresent());
-            assertEquals(StatusTask.NEW, epic.get().getStatus());
+            Epic retrievedEpic = taskManager.getEpicById(epicId);
+            assertNotNull(retrievedEpic);
+            assertEquals(StatusTask.NEW, retrievedEpic.getStatus());
         }
 
         @Test
@@ -363,9 +362,9 @@ class InMemoryTaskManagerTest {
             taskManager.createSubTask(subTaskDone);
 
             // Then
-            Optional<Epic> epic = taskManager.getEpicById(epicId);
-            assertTrue(epic.isPresent());
-            assertEquals(StatusTask.IN_PROGRESS, epic.get().getStatus());
+            Epic retrievedEpic = taskManager.getEpicById(epicId);
+            assertNotNull(retrievedEpic);
+            assertEquals(StatusTask.IN_PROGRESS, retrievedEpic.getStatus());
         }
 
         @Test
@@ -376,9 +375,9 @@ class InMemoryTaskManagerTest {
             taskManager.createSubTask(subTaskDone);
 
             // Then
-            Optional<Epic> epic = taskManager.getEpicById(epicId);
-            assertTrue(epic.isPresent());
-            assertEquals(StatusTask.DONE, epic.get().getStatus());
+            Epic retrievedEpic = taskManager.getEpicById(epicId);
+            assertNotNull(retrievedEpic);
+            assertEquals(StatusTask.DONE, retrievedEpic.getStatus());
         }
 
         @Test
@@ -389,9 +388,9 @@ class InMemoryTaskManagerTest {
             taskManager.createSubTask(subTaskNew);
 
             // Then
-            Optional<Epic> epic = taskManager.getEpicById(epicId);
-            assertTrue(epic.isPresent());
-            assertEquals(StatusTask.IN_PROGRESS, epic.get().getStatus());
+            Epic retrievedEpic = taskManager.getEpicById(epicId);
+            assertNotNull(retrievedEpic);
+            assertEquals(StatusTask.IN_PROGRESS, retrievedEpic.getStatus());
         }
 
         @Test
@@ -451,16 +450,19 @@ class InMemoryTaskManagerTest {
         void testDeleteNonExistentTask_shouldNotThrow() {
             // When & Then
             assertDoesNotThrow(() -> taskManager.deleteTaskById(999));
-            assertTrue(taskManager.getTaskById(999).isEmpty());
+
         }
 
         @Test
-        @DisplayName("должно выдать исключение")
+        @DisplayName("должно выдать исключение при удалении несуществующего эпика")
         void testDeleteNonExistentEpic_shouldThrow() {
-            // When & Then
-            assertThrows(IllegalArgumentException.class, ()
-                    -> taskManager.deleteEpicById(999));
-            assertTrue(taskManager.getEpicById(999).isEmpty());
+            int nonExistentEpicId = 999;
+
+            assertThrows(NotFoundException.class,
+                    () -> taskManager.deleteEpicById(nonExistentEpicId));
+
+            assertThrows(NotFoundException.class,
+                    () -> taskManager.getEpicById(nonExistentEpicId));
         }
 
         @Test
@@ -468,7 +470,7 @@ class InMemoryTaskManagerTest {
         void testDeleteNonExistentSubtask_shouldNotThrow() {
             // When & Then
             assertDoesNotThrow(() -> taskManager.deleteSubTaskById(999));
-            assertTrue(taskManager.getSubTaskById(999).isEmpty()); // Изменено на isEmpty()
+            assertThrows(NotFoundException.class, () -> taskManager.getSubTaskById(999));
         }
 
         @Test
@@ -478,7 +480,7 @@ class InMemoryTaskManagerTest {
             taskManager.deleteTaskById(taskId);
 
             // Then
-            assertTrue(taskManager.getTaskById(taskId).isEmpty());
+            assertThrows(NotFoundException.class, () -> taskManager.getTaskById(taskId));
         }
 
         @Test
@@ -498,8 +500,8 @@ class InMemoryTaskManagerTest {
             taskManager.deleteEpicById(epicId);
 
             // Then
-            assertTrue(taskManager.getEpicById(epicId).isEmpty());
-            assertTrue(taskManager.getSubTaskById(subTaskId).isEmpty());
+            assertThrows(NotFoundException.class, () -> taskManager.getEpicById(epicId));
+            assertThrows(NotFoundException.class , () -> taskManager.getSubTaskById(subTaskId));
         }
 
         @Test
@@ -509,7 +511,7 @@ class InMemoryTaskManagerTest {
             taskManager.deleteSubTaskById(subTaskId);
 
             // Then
-            assertTrue(taskManager.getSubTaskById(subTaskId).isEmpty());
+            assertThrows(NotFoundException.class, () -> taskManager.getSubTaskById(subTaskId));
             assertTrue(taskManager.getSubTasksByEpicId(epicId).isEmpty());
         }
 
@@ -601,18 +603,17 @@ class InMemoryTaskManagerTest {
             int epicId = taskManager.createEpic(epic);
 
             // When
-            Optional<Task> retrievedTask = taskManager.getTaskById(taskId);
-            Optional<Epic> retrievedEpic = taskManager.getEpicById(epicId);
+            Task retrievedTask = taskManager.getTaskById(taskId);
+            Epic retrievedEpic = taskManager.getEpicById(epicId);
             Collection<Task> history = taskManager.getHistory();
 
             // Then
             assertEquals(2, history.size());
-            assertTrue(retrievedTask.isPresent());
-            assertTrue(retrievedEpic.isPresent());
-            assertTrue(history.contains(retrievedTask.get()));
-            assertTrue(history.contains(retrievedEpic.get()));
+            assertNotNull(retrievedTask);
+            assertNotNull(retrievedEpic);
+            assertTrue(history.contains(retrievedTask));
+            assertTrue(history.contains(retrievedEpic));
         }
-
 
         @Test
         @DisplayName("Повторный просмотр задачи: история не должна дублироваться")
@@ -623,13 +624,13 @@ class InMemoryTaskManagerTest {
             int taskId = taskManager.createTask(task);
 
             // When
-            Optional<Task> retrievedTask1 = taskManager.getTaskById(taskId);
+            Task retrievedTask1 = taskManager.getTaskById(taskId);
 
             // Then
             Collection<Task> history = taskManager.getHistory();
             assertEquals(1, history.size());
-            assertTrue(retrievedTask1.isPresent());
-            assertEquals(retrievedTask1.get(), history.iterator().next());
+            assertNotNull(retrievedTask1);
+            assertEquals(retrievedTask1, history.iterator().next());
         }
 
         @Test
@@ -660,16 +661,22 @@ class InMemoryTaskManagerTest {
             SubTask subTask2 = new SubTask(taskManager.generateId(), "Subtask 2",
                     "Subtask 2 description", StatusTask.IN_PROGRESS, epicId);
 
+            int subTaskId1 = taskManager.createSubTask(subTask1);
+            int subTaskId2 = taskManager.createSubTask(subTask2);
+
             taskManager.getEpicById(epicId);
-            taskManager.getSubTaskById(subTask1.getId());
-            taskManager.getSubTaskById(subTask2.getId());
+            taskManager.getSubTaskById(subTaskId1);
+            taskManager.getSubTaskById(subTaskId2);
+
+            Collection<Task> historyBefore = taskManager.getHistory();
+            assertEquals(3, historyBefore.size(), "В истории должно быть 3 задачи перед удалением");
 
             // When
             taskManager.deleteEpicById(epicId);
 
             // Then
             Collection<Task> historyAfter = taskManager.getHistory();
-            assertEquals(0, historyAfter.size());
+            assertTrue(historyAfter.isEmpty(), "История должна быть пустой после удаления эпика");
         }
 
         @Test
@@ -854,477 +861,476 @@ class InMemoryTaskManagerTest {
         }
     }
 
+    @Nested
+    @DisplayName("Тесты временных параметров задач")
+    class TaskTimeTests {
 
-        @Nested
-        @DisplayName("Тесты временных параметров задач")
-        class TaskTimeTests {
+        @Test
+        @DisplayName("Создание задачи с временными параметрами")
+        void testCreateTaskWithTimeParameters() throws IOException {
+            // Given
+            Task task = new Task(taskManager.generateId(), "Task with time",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
 
-            @Test
-            @DisplayName("Создание задачи с временными параметрами")
-            void testCreateTaskWithTimeParameters() throws IOException {
-                // Given
-                Task task = new Task(taskManager.generateId(), "Task with time",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
+            // When
+            int taskId = taskManager.createTask(task);
+            Task createdTask = taskManager.getTaskById(taskId);
 
-                // When
-                int taskId = taskManager.createTask(task);
-                Optional<Task> createdTask = taskManager.getTaskById(taskId);
-
-                // Then
-                assertTrue(createdTask.isPresent());
-                assertEquals(LocalDateTime.of(2025, 9, 8, 10, 0),
-                        createdTask.get().getStartTime());
-                assertEquals(Duration.ofHours(2), createdTask.get().getDuration());
-                assertEquals(LocalDateTime.of(2025, 9, 8, 12, 0),
-                        createdTask.get().getEndTime());
-            }
-
-            @Test
-            @DisplayName("Создание задачи без временных параметров")
-            void testCreateTaskWithoutTimeParameters() throws IOException {
-                // Given
-                Task task = new Task(taskManager.generateId(), "Task without time",
-                        "Description", StatusTask.NEW, null, null);
-
-                // When
-                int taskId = taskManager.createTask(task);
-                Optional<Task> createdTask = taskManager.getTaskById(taskId);
-
-                // Then
-                assertTrue(createdTask.isPresent());
-                assertNull(createdTask.get().getStartTime());
-                assertNull(createdTask.get().getDuration());
-                assertNull(createdTask.get().getEndTime());
-            }
-
-            @Test
-            @DisplayName("Обновление задачи с добавлением временных параметров")
-            void testUpdateTaskAddTimeParameters() throws IOException {
-                // Given
-                Task task = new Task(taskManager.generateId(), "Task",
-                        "Description", StatusTask.NEW, null, null);
-                int taskId = taskManager.createTask(task);
-
-                Task updatedTask = new Task(taskId, "Updated Task",
-                        "Updated Description", StatusTask.IN_PROGRESS,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 14, 0));
-
-                // When
-                taskManager.updateTask(updatedTask);
-                Optional<Task> result = taskManager.getTaskById(taskId);
-
-                // Then
-                assertTrue(result.isPresent());
-                assertEquals(LocalDateTime.of(2025, 9, 8, 14, 0),
-                        result.get().getStartTime());
-                assertEquals(Duration.ofHours(1), result.get().getDuration());
-                assertEquals(LocalDateTime.of(2025, 9, 8, 15, 0),
-                        result.get().getEndTime());
-            }
-
-            @Test
-            @DisplayName("Обновление задачи с удалением временных параметров")
-            void testUpdateTaskRemoveTimeParameters() throws IOException {
-                // Given
-                Task task = new Task(taskManager.generateId(), "Task",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-                int taskId = taskManager.createTask(task);
-
-                Task updatedTask = new Task(taskId, "Updated Task",
-                        "Updated Description", StatusTask.IN_PROGRESS,
-                        null, null);
-
-                // When
-                taskManager.updateTask(updatedTask);
-                Optional<Task> result = taskManager.getTaskById(taskId);
-
-                // Then
-                assertTrue(result.isPresent());
-                assertNull(result.get().getStartTime());
-                assertNull(result.get().getDuration());
-                assertNull(result.get().getEndTime());
-            }
+            // Then
+            assertNotNull(createdTask);
+            assertEquals(LocalDateTime.of(2025, 9, 8, 10, 0),
+                    createdTask.getStartTime());
+            assertEquals(Duration.ofHours(2), createdTask.getDuration());
+            assertEquals(LocalDateTime.of(2025, 9, 8, 12, 0),
+                    createdTask.getEndTime());
         }
 
-        @Nested
-        @DisplayName("Тесты приоритетного списка задач")
-        class PrioritizedTasksTests {
+        @Test
+        @DisplayName("Создание задачи без временных параметров")
+        void testCreateTaskWithoutTimeParameters() throws IOException {
+            // Given
+            Task task = new Task(taskManager.generateId(), "Task without time",
+                    "Description", StatusTask.NEW, null, null);
 
-            @Test
-            @DisplayName("Получение приоритетного списка задач")
-            void testGetPrioritizedTasks() throws IOException {
-                // Given
-                Task task1 = new Task(taskManager.generateId(), "Task 1",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 14, 0));
+            // When
+            int taskId = taskManager.createTask(task);
+            Task createdTask = taskManager.getTaskById(taskId);
 
-                Task task2 = new Task(taskManager.generateId(), "Task 2",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-
-                Task task3 = new Task(taskManager.generateId(), "Task 3",
-                        "Description", StatusTask.NEW, null, null);
-
-                taskManager.createTask(task1);
-                taskManager.createTask(task2);
-                taskManager.createTask(task3);
-
-                // When
-                List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
-
-                // Then
-                assertEquals(2, prioritizedTasks.size());
-                assertEquals("Task 2", prioritizedTasks.get(0).getName());
-                assertEquals("Task 1", prioritizedTasks.get(1).getName());
-            }
-
-            @Test
-            @DisplayName(" Задачи без времени не должны добавляться в приоритетный список")
-            void testPrioritizedTasksWithTwoTasksWithTime() throws IOException {
-                Task task1 = new Task("Task 1", "Description");
-                task1.setStartTime(LocalDateTime.now());
-
-                Task task2 = new Task("Task 2", "Description");
-                task2.setStartTime(LocalDateTime.now().plusHours(1));
-
-                Task taskWithoutTime = new Task("No time", "Description");
-
-                taskManager.createTask(task1);
-                taskManager.createTask(task2);
-                taskManager.createTask(taskWithoutTime);
-
-                assertEquals(2, taskManager.getPrioritizedTasks().size());
-            }
+            // Then
+            assertNotNull(createdTask);
+            assertNull(createdTask.getStartTime());
+            assertNull(createdTask.getDuration());
+            assertNull(createdTask.getEndTime());
         }
 
-        @Nested
-        @DisplayName("Тесты временных параметров эпиков")
-        class EpicTimeTests {
+        @Test
+        @DisplayName("Обновление задачи с добавлением временных параметров")
+        void testUpdateTaskAddTimeParameters() throws IOException {
+            // Given
+            Task task = new Task(taskManager.generateId(), "Task",
+                    "Description", StatusTask.NEW, null, null);
+            int taskId = taskManager.createTask(task);
 
-            @Test
-            @DisplayName("Расчет времени эпика на основе подзадач")
-            void testEpicTimeCalculationFromSubtasks() throws IOException {
-                // Given
-                Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
-                int epicId = taskManager.createEpic(epic);
+            Task updatedTask = new Task(taskId, "Updated Task",
+                    "Updated Description", StatusTask.IN_PROGRESS,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 14, 0));
 
-                SubTask subTask1 = new SubTask(taskManager.generateId(), "Subtask 1",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 10, 0), epicId);
+            // When
+            taskManager.updateTask(updatedTask);
+            Task result = taskManager.getTaskById(taskId);
 
-                SubTask subTask2 = new SubTask(taskManager.generateId(), "Subtask 2",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 12, 0), epicId);
-
-                // When
-                taskManager.createSubTask(subTask1);
-                taskManager.createSubTask(subTask2);
-                Optional<Epic> resultEpic = taskManager.getEpicById(epicId);
-
-                // Then
-                assertTrue(resultEpic.isPresent());
-                assertEquals(LocalDateTime.of(2025, 9,
-                        8, 10, 0), resultEpic.get().getStartTime());
-                assertEquals(Duration.ofHours(3), resultEpic.get().getDuration());
-                assertEquals(LocalDateTime.of(2025, 9,
-                        8, 14, 0), resultEpic.get().getEndTime());
-            }
-
-            @Test
-            @DisplayName("Обновление времени эпика при удалении подзадачи")
-            void testEpicTimeUpdateWhenSubtaskRemoved() throws IOException {
-                // Given
-                Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
-                int epicId = taskManager.createEpic(epic);
-
-                SubTask subTask1 = new SubTask(taskManager.generateId(), "Subtask 1",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 10, 0), epicId);
-
-                SubTask subTask2 = new SubTask(taskManager.generateId(), "Subtask 2",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 12, 0), epicId);
-
-                int subTaskId1 = taskManager.createSubTask(subTask1);
-                int subTaskId2 = taskManager.createSubTask(subTask2);
-
-                // When
-                taskManager.deleteSubTaskById(subTaskId1);
-                Optional<Epic> resultEpic = taskManager.getEpicById(epicId);
-
-                // Then
-                assertTrue(resultEpic.isPresent());
-                assertEquals(LocalDateTime.of(2025, 9, 8, 12, 0),
-                        resultEpic.get().getStartTime());
-                assertEquals(Duration.ofHours(2), resultEpic.get().getDuration());
-                assertEquals(LocalDateTime.of(2025, 9, 8, 14, 0),
-                        resultEpic.get().getEndTime());
-            }
-
-            @Test
-            @DisplayName("Эпик без подзадач не имеет временных параметров")
-            void testEpicWithoutSubtasksHasNoTimeParameters() throws IOException {
-                // Given
-                Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
-                int epicId = taskManager.createEpic(epic);
-
-                // When
-                Optional<Epic> resultEpic = taskManager.getEpicById(epicId);
-
-                // Then
-                assertTrue(resultEpic.isPresent());
-                assertNull(resultEpic.get().getStartTime());
-                assertNull(resultEpic.get().getDuration());
-                assertNull(resultEpic.get().getEndTime());
-            }
-
-            @Test
-            @DisplayName("Эпик с подзадачами без времени не имеет временных параметров")
-            void testEpicWithSubtasksWithoutTimeHasNoTimeParameters() throws IOException {
-                // Given
-                Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
-                int epicId = taskManager.createEpic(epic);
-
-                SubTask subTask = new SubTask(taskManager.generateId(), "Subtask",
-                        "Description", StatusTask.NEW, null, null, epicId);
-
-                // When
-                taskManager.createSubTask(subTask);
-                Optional<Epic> resultEpic = taskManager.getEpicById(epicId);
-
-                // Then
-                assertTrue(resultEpic.isPresent());
-                assertNull(resultEpic.get().getStartTime());
-                assertNull(resultEpic.get().getDuration());
-                assertNull(resultEpic.get().getEndTime());
-            }
+            // Then
+            assertNotNull(result);
+            assertEquals(LocalDateTime.of(2025, 9, 8, 14, 0),
+                    result.getStartTime());
+            assertEquals(Duration.ofHours(1), result.getDuration());
+            assertEquals(LocalDateTime.of(2025, 9, 8, 15, 0),
+                    result.getEndTime());
         }
 
-        @Nested
-        @DisplayName("Тесты проверки пересечений по времени")
-        class TimeOverlapTests {
+        @Test
+        @DisplayName("Обновление задачи с удалением временных параметров")
+        void testUpdateTaskRemoveTimeParameters() throws IOException {
+            // Given
+            Task task = new Task(taskManager.generateId(), "Task",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+            int taskId = taskManager.createTask(task);
 
-            @Test
-            @DisplayName("Создание непересекающихся задач должно быть успешным")
-            void testCreateNonOverlappingTasksShouldSucceed() {
-                // Given
-                Task task1 = new Task(taskManager.generateId(), "Task 1",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
+            Task updatedTask = new Task(taskId, "Updated Task",
+                    "Updated Description", StatusTask.IN_PROGRESS,
+                    null, null);
 
-                Task task2 = new Task(taskManager.generateId(), "Task 2",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 11, 30));
+            // When
+            taskManager.updateTask(updatedTask);
+            Task result = taskManager.getTaskById(taskId);
 
-                // When & Then
-                assertDoesNotThrow(() -> {
-                    taskManager.createTask(task1);
-                    taskManager.createTask(task2);
-                });
-            }
-
-            @Test
-            @DisplayName("Создание пересекающихся задач должно выбрасывать исключение")
-            void testCreateOverlappingTasksShouldThrowException() throws IOException {
-                // Given
-                Task task1 = new Task(taskManager.generateId(), "Task 1",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-
-                Task task2 = new Task(taskManager.generateId(), "Task 2",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 11, 0));
-
-                // When & Then
-                taskManager.createTask(task1);
-                assertThrows(RuntimeException.class, () -> taskManager.createTask(task2));
-            }
-
-            @Test
-            @DisplayName("Обновление задачи с созданием пересечения должно выбрасывать исключение")
-            void testUpdateTaskCreatingOverlapShouldThrowException() throws IOException {
-                // Given
-                Task task1 = new Task(taskManager.generateId(), "Task 1",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-
-                Task task2 = new Task(taskManager.generateId(), "Task 2",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 13, 0));
-
-                int taskId1 = taskManager.createTask(task1);
-                int taskId2 = taskManager.createTask(task2);
-
-                Task updatedTask2 = new Task(taskId2, "Updated Task 2",
-                        "Updated Description", StatusTask.IN_PROGRESS,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 11, 0));
-
-                // When & Then
-                assertThrows(RuntimeException.class, () -> taskManager.updateTask(updatedTask2));
-            }
-
-            @Test
-            @DisplayName("Задачи без времени не создают пересечений")
-            void testTasksWithoutTimeDoNotCreateOverlaps() {
-                // Given
-                Task task1 = new Task(taskManager.generateId(), "Task 1",
-                        "Description", StatusTask.NEW, null, null);
-
-                Task task2 = new Task(taskManager.generateId(), "Task 2",
-                        "Description", StatusTask.NEW, null, null);
-
-                // When & Then
-                assertDoesNotThrow(() -> {
-                    taskManager.createTask(task1);
-                    taskManager.createTask(task2);
-                });
-            }
-        }
-
-        @Nested
-        @DisplayName("Тесты удаления задач из временных слотов")
-        class TimeSlotsRemovalTests {
-
-            @Test
-            @DisplayName("Удаление задачи должно освобождать временные слоты")
-            void testDeleteTaskShouldFreeTimeSlots() throws IOException {
-                // Given
-                Task task = new Task(taskManager.generateId(), "Task",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-
-                int taskId = taskManager.createTask(task);
-
-                Task overlappingTask = new Task(taskManager.generateId(), "Overlapping Task",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 11, 0));
-
-                // When
-                taskManager.deleteTaskById(taskId);
-
-                // Then
-                assertDoesNotThrow(() -> taskManager.createTask(overlappingTask));
-            }
-
-            @Test
-            @DisplayName("Удаление всех задач должно освобождать все временные слоты")
-            void testDeleteAllTasksShouldFreeAllTimeSlots() throws IOException {
-                // Given
-                Task task1 = new Task(taskManager.generateId(), "Task 1",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-
-                Task task2 = new Task(taskManager.generateId(), "Task 2",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 12, 0));
-
-                taskManager.createTask(task1);
-                taskManager.createTask(task2);
-
-                Task overlappingTask = new Task(taskManager.generateId(), "Overlapping Task",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(3),
-                        LocalDateTime.of(2025, 9, 8, 9, 0));
-
-                // When
-                taskManager.deleteAllTasks();
-
-                // Then
-                assertDoesNotThrow(() -> taskManager.createTask(overlappingTask));
-            }
-
-            @Test
-            @DisplayName("Удаление подзадачи должно освобождать временные слоты")
-            void testDeleteSubTaskShouldFreeTimeSlots() throws IOException {
-                // Given
-                Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
-                int epicId = taskManager.createEpic(epic);
-
-                SubTask subTask = new SubTask(taskManager.generateId(), "Subtask",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(2),
-                        LocalDateTime.of(2025, 9, 8, 10, 0), epicId);
-
-                int subTaskId = taskManager.createSubTask(subTask);
-
-                Task overlappingTask = new Task(taskManager.generateId(), "Overlapping Task",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 11, 0));
-
-                // When
-                taskManager.deleteSubTaskById(subTaskId);
-
-                // Then
-                assertDoesNotThrow(() -> taskManager.createTask(overlappingTask));
-            }
-        }
-
-        @Nested
-        @DisplayName("Тесты граничных случаев временных параметров")
-        class EdgeCaseTimeTests {
-
-            @Test
-            @DisplayName("Задача с нулевой длительностью")
-            void testTaskWithZeroDuration() throws IOException {
-                // Given
-                Task task = new Task(taskManager.generateId(), "Task",
-                        "Description", StatusTask.NEW,
-                        Duration.ZERO,
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-
-                // When
-                int taskId = taskManager.createTask(task);
-                Optional<Task> createdTask = taskManager.getTaskById(taskId);
-
-                // Then
-                assertTrue(createdTask.isPresent());
-                assertEquals(LocalDateTime.of(2025, 9, 8, 10, 0),
-                        createdTask.get().getStartTime());
-                assertEquals(Duration.ZERO, createdTask.get().getDuration());
-                assertEquals(LocalDateTime.of(2025, 9, 8, 10, 0),
-                        createdTask.get().getEndTime());
-            }
-
-            @Test
-            @DisplayName("Задачи с одинаковым временем начала должны создавать пересечение")
-            void testTasksWithSameStartTimeShouldOverlap() throws IOException {
-                // Given
-                Task task1 = new Task(taskManager.generateId(), "Task 1",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-
-                Task task2 = new Task(taskManager.generateId(), "Task 2",
-                        "Description", StatusTask.NEW,
-                        Duration.ofHours(1),
-                        LocalDateTime.of(2025, 9, 8, 10, 0));
-
-                // When & Then
-                taskManager.createTask(task1);
-                assertThrows(RuntimeException.class, () -> taskManager.createTask(task2));
-            }
+            // Then
+            assertNotNull(result);
+            assertNull(result.getStartTime());
+            assertNull(result.getDuration());
+            assertNull(result.getEndTime());
         }
     }
+
+    @Nested
+    @DisplayName("Тесты приоритетного списка задач")
+    class PrioritizedTasksTests {
+
+        @Test
+        @DisplayName("Получение приоритетного списка задач")
+        void testGetPrioritizedTasks() throws IOException {
+            // Given
+            Task task1 = new Task(taskManager.generateId(), "Task 1",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 14, 0));
+
+            Task task2 = new Task(taskManager.generateId(), "Task 2",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            Task task3 = new Task(taskManager.generateId(), "Task 3",
+                    "Description", StatusTask.NEW, null, null);
+
+            taskManager.createTask(task1);
+            taskManager.createTask(task2);
+            taskManager.createTask(task3);
+
+            // When
+            List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+
+            // Then
+            assertEquals(2, prioritizedTasks.size());
+            assertEquals("Task 2", prioritizedTasks.get(0).getName());
+            assertEquals("Task 1", prioritizedTasks.get(1).getName());
+        }
+
+        @Test
+        @DisplayName(" Задачи без времени не должны добавляться в приоритетный список")
+        void testPrioritizedTasksWithTwoTasksWithTime() throws IOException {
+            Task task1 = new Task("Task 1", "Description");
+            task1.setStartTime(LocalDateTime.now());
+
+            Task task2 = new Task("Task 2", "Description");
+            task2.setStartTime(LocalDateTime.now().plusHours(1));
+
+            Task taskWithoutTime = new Task("No time", "Description");
+
+            taskManager.createTask(task1);
+            taskManager.createTask(task2);
+            taskManager.createTask(taskWithoutTime);
+
+            assertEquals(2, taskManager.getPrioritizedTasks().size());
+        }
+    }
+
+    @Nested
+    @DisplayName("Тесты временных параметров эпиков")
+    class EpicTimeTests {
+
+        @Test
+        @DisplayName("Расчет времени эпика на основе подзадач")
+        void testEpicTimeCalculationFromSubtasks() throws IOException {
+            // Given
+            Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
+            int epicId = taskManager.createEpic(epic);
+
+            SubTask subTask1 = new SubTask(taskManager.generateId(), "Subtask 1",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 10, 0), epicId);
+
+            SubTask subTask2 = new SubTask(taskManager.generateId(), "Subtask 2",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 12, 0), epicId);
+
+            // When
+            taskManager.createSubTask(subTask1);
+            taskManager.createSubTask(subTask2);
+            Epic resultEpic = taskManager.getEpicById(epicId);
+
+            // Then
+            assertNotNull(resultEpic);
+            assertEquals(LocalDateTime.of(2025, 9,
+                    8, 10, 0), resultEpic.getStartTime());
+            assertEquals(Duration.ofHours(3), resultEpic.getDuration());
+            assertEquals(LocalDateTime.of(2025, 9,
+                    8, 14, 0), resultEpic.getEndTime());
+        }
+
+        @Test
+        @DisplayName("Обновление времени эпика при удалении подзадачи")
+        void testEpicTimeUpdateWhenSubtaskRemoved() throws IOException {
+            // Given
+            Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
+            int epicId = taskManager.createEpic(epic);
+
+            SubTask subTask1 = new SubTask(taskManager.generateId(), "Subtask 1",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 10, 0), epicId);
+
+            SubTask subTask2 = new SubTask(taskManager.generateId(), "Subtask 2",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 12, 0), epicId);
+
+            int subTaskId1 = taskManager.createSubTask(subTask1);
+            int subTaskId2 = taskManager.createSubTask(subTask2);
+
+            // When
+            taskManager.deleteSubTaskById(subTaskId1);
+            Epic resultEpic = taskManager.getEpicById(epicId);
+
+            // Then
+            assertNotNull(resultEpic);
+            assertEquals(LocalDateTime.of(2025, 9, 8, 12, 0),
+                    resultEpic.getStartTime());
+            assertEquals(Duration.ofHours(2), resultEpic.getDuration());
+            assertEquals(LocalDateTime.of(2025, 9, 8, 14, 0),
+                    resultEpic.getEndTime());
+        }
+
+        @Test
+        @DisplayName("Эпик без подзадач не имеет временных параметров")
+        void testEpicWithoutSubtasksHasNoTimeParameters() throws IOException {
+            // Given
+            Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
+            int epicId = taskManager.createEpic(epic);
+
+            // When
+            Epic resultEpic = taskManager.getEpicById(epicId);
+
+            // Then
+            assertNotNull(resultEpic);
+            assertNull(resultEpic.getStartTime());
+            assertNull(resultEpic.getDuration());
+            assertNull(resultEpic.getEndTime());
+        }
+
+        @Test
+        @DisplayName("Эпик с подзадачами без времени не имеет временных параметров")
+        void testEpicWithSubtasksWithoutTimeHasNoTimeParameters() throws IOException {
+            // Given
+            Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
+            int epicId = taskManager.createEpic(epic);
+
+            SubTask subTask = new SubTask(taskManager.generateId(), "Subtask",
+                    "Description", StatusTask.NEW, null, null, epicId);
+
+            // When
+            taskManager.createSubTask(subTask);
+            Epic resultEpic = taskManager.getEpicById(epicId);
+
+            // Then
+            assertNotNull(resultEpic);
+            assertNull(resultEpic.getStartTime());
+            assertNull(resultEpic.getDuration());
+            assertNull(resultEpic.getEndTime());
+        }
+    }
+
+    @Nested
+    @DisplayName("Тесты проверки пересечений по времени")
+    class TimeOverlapTests {
+
+        @Test
+        @DisplayName("Создание непересекающихся задач должно быть успешным")
+        void testCreateNonOverlappingTasksShouldSucceed() {
+            // Given
+            Task task1 = new Task(taskManager.generateId(), "Task 1",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            Task task2 = new Task(taskManager.generateId(), "Task 2",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 11, 30));
+
+            // When & Then
+            assertDoesNotThrow(() -> {
+                taskManager.createTask(task1);
+                taskManager.createTask(task2);
+            });
+        }
+
+        @Test
+        @DisplayName("Создание пересекающихся задач должно выбрасывать исключение")
+        void testCreateOverlappingTasksShouldThrowException() throws IOException {
+            // Given
+            Task task1 = new Task(taskManager.generateId(), "Task 1",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            Task task2 = new Task(taskManager.generateId(), "Task 2",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 11, 0));
+
+            // When & Then
+            taskManager.createTask(task1);
+            assertThrows(RuntimeException.class, () -> taskManager.createTask(task2));
+        }
+
+        @Test
+        @DisplayName("Обновление задачи с созданием пересечения должно выбрасывать исключение")
+        void testUpdateTaskCreatingOverlapShouldThrowException() throws IOException {
+            // Given
+            Task task1 = new Task(taskManager.generateId(), "Task 1",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            Task task2 = new Task(taskManager.generateId(), "Task 2",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 13, 0));
+
+            int taskId1 = taskManager.createTask(task1);
+            int taskId2 = taskManager.createTask(task2);
+
+            Task updatedTask2 = new Task(taskId2, "Updated Task 2",
+                    "Updated Description", StatusTask.IN_PROGRESS,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 11, 0));
+
+            // When & Then
+            assertThrows(RuntimeException.class, () -> taskManager.updateTask(updatedTask2));
+        }
+
+        @Test
+        @DisplayName("Задачи без времени не создают пересечений")
+        void testTasksWithoutTimeDoNotCreateOverlaps() {
+            // Given
+            Task task1 = new Task(taskManager.generateId(), "Task 1",
+                    "Description", StatusTask.NEW, null, null);
+
+            Task task2 = new Task(taskManager.generateId(), "Task 2",
+                    "Description", StatusTask.NEW, null, null);
+
+            // When & Then
+            assertDoesNotThrow(() -> {
+                taskManager.createTask(task1);
+                taskManager.createTask(task2);
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("Тесты удаления задач из временных слотов")
+    class TimeSlotsRemovalTests {
+
+        @Test
+        @DisplayName("Удаление задачи должно освобождать временные слоты")
+        void testDeleteTaskShouldFreeTimeSlots() throws IOException {
+            // Given
+            Task task = new Task(taskManager.generateId(), "Task",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            int taskId = taskManager.createTask(task);
+
+            Task overlappingTask = new Task(taskManager.generateId(), "Overlapping Task",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 11, 0));
+
+            // When
+            taskManager.deleteTaskById(taskId);
+
+            // Then
+            assertDoesNotThrow(() -> taskManager.createTask(overlappingTask));
+        }
+
+        @Test
+        @DisplayName("Удаление всех задач должно освобождать все временные слоты")
+        void testDeleteAllTasksShouldFreeAllTimeSlots() throws IOException {
+            // Given
+            Task task1 = new Task(taskManager.generateId(), "Task 1",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            Task task2 = new Task(taskManager.generateId(), "Task 2",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 12, 0));
+
+            taskManager.createTask(task1);
+            taskManager.createTask(task2);
+
+            Task overlappingTask = new Task(taskManager.generateId(), "Overlapping Task",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(3),
+                    LocalDateTime.of(2025, 9, 8, 9, 0));
+
+            // When
+            taskManager.deleteAllTasks();
+
+            // Then
+            assertDoesNotThrow(() -> taskManager.createTask(overlappingTask));
+        }
+
+        @Test
+        @DisplayName("Удаление подзадачи должно освобождать временные слоты")
+        void testDeleteSubTaskShouldFreeTimeSlots() throws IOException {
+            // Given
+            Epic epic = new Epic(taskManager.generateId(), "Epic", "Description");
+            int epicId = taskManager.createEpic(epic);
+
+            SubTask subTask = new SubTask(taskManager.generateId(), "Subtask",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(2),
+                    LocalDateTime.of(2025, 9, 8, 10, 0), epicId);
+
+            int subTaskId = taskManager.createSubTask(subTask);
+
+            Task overlappingTask = new Task(taskManager.generateId(), "Overlapping Task",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 11, 0));
+
+            // When
+            taskManager.deleteSubTaskById(subTaskId);
+
+            // Then
+            assertDoesNotThrow(() -> taskManager.createTask(overlappingTask));
+        }
+    }
+
+    @Nested
+    @DisplayName("Тесты граничных случаев временных параметров")
+    class EdgeCaseTimeTests {
+
+        @Test
+        @DisplayName("Задача с нулевой длительностью")
+        void testTaskWithZeroDuration() throws IOException {
+            // Given
+            Task task = new Task(taskManager.generateId(), "Task",
+                    "Description", StatusTask.NEW,
+                    Duration.ZERO,
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            // When
+            int taskId = taskManager.createTask(task);
+            Task createdTask = taskManager.getTaskById(taskId);
+
+            // Then
+            assertNotNull(createdTask);
+            assertEquals(LocalDateTime.of(2025, 9, 8, 10, 0),
+                    createdTask.getStartTime());
+            assertEquals(Duration.ZERO, createdTask.getDuration());
+            assertEquals(LocalDateTime.of(2025, 9, 8, 10, 0),
+                    createdTask.getEndTime());
+        }
+
+        @Test
+        @DisplayName("Задачи с одинаковым временем начала должны создавать пересечение")
+        void testTasksWithSameStartTimeShouldOverlap() throws IOException {
+            // Given
+            Task task1 = new Task(taskManager.generateId(), "Task 1",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            Task task2 = new Task(taskManager.generateId(), "Task 2",
+                    "Description", StatusTask.NEW,
+                    Duration.ofHours(1),
+                    LocalDateTime.of(2025, 9, 8, 10, 0));
+
+            // When & Then
+            taskManager.createTask(task1);
+            assertThrows(RuntimeException.class, () -> taskManager.createTask(task2));
+        }
+    }
+}

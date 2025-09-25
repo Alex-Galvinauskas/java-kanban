@@ -184,11 +184,11 @@ class InMemoryHistoryManagerTest {
         taskManager.createTask(task1);
 
         //When
-        Optional<Task> retrievedTask = taskManager.getTaskById(1);
-        historyManager.add(retrievedTask.orElse(null));
+        Task retrievedTask = taskManager.getTaskById(1);
+        historyManager.add(retrievedTask);
 
         //Then
-        assertTrue(retrievedTask.isPresent(), "Задача должна существовать");
-        assertEquals(retrievedTask.get(), historyManager.getHistory().getFirst());
+        assertNotNull(retrievedTask, "Задача должна существовать");
+        assertEquals(retrievedTask, historyManager.getHistory().getFirst());
     }
 }

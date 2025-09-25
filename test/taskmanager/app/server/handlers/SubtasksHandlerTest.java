@@ -5,6 +5,7 @@ import org.junit.jupiter.api.*;
 import taskmanager.app.entity.Epic;
 import taskmanager.app.entity.StatusTask;
 import taskmanager.app.entity.SubTask;
+import taskmanager.app.exception.NotFoundException;
 import taskmanager.app.management.TaskManager;
 import taskmanager.app.server.HttpTaskServer;
 import taskmanager.app.service.manager.InMemoryTaskManager;
@@ -160,7 +161,8 @@ class SubtasksHandlerTest {
         // Then
         assertEquals(200, response.statusCode());
 
-        SubTask subTask = manager.getSubTaskById(subTaskId).orElseThrow();
+        SubTask subTask = manager.getSubTaskById(subTaskId);
+        assertNotNull(subTask, "Подзадача должна существовать");
         assertEquals("Updated SubTask", subTask.getName());
         assertEquals(StatusTask.IN_PROGRESS, subTask.getStatus());
     }
@@ -179,7 +181,7 @@ class SubtasksHandlerTest {
 
         // Then
         assertEquals(204, response.statusCode());
-        assertFalse(manager.getSubTaskById(subTaskId).isPresent());
+        assertThrows(NotFoundException.class, () -> manager.getSubTaskById(subTaskId));
         assertTrue(manager.getAllSubTasks().isEmpty());
     }
 
@@ -372,7 +374,8 @@ class SubtasksHandlerTest {
         // Then
         assertEquals(200, response.statusCode());
 
-        SubTask subTask = manager.getSubTaskById(subTaskId).orElseThrow();
+        SubTask subTask = manager.getSubTaskById(subTaskId);
+        assertNotNull(subTask, "Подзадача должна существовать");
         assertEquals(newEpicId, subTask.getEpicId());
         assertEquals(StatusTask.DONE, subTask.getStatus());
     }
