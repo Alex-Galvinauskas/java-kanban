@@ -9,7 +9,6 @@ import taskmanager.app.management.TaskManager;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 

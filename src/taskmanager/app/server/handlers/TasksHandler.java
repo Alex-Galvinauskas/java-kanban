@@ -8,7 +8,6 @@ import taskmanager.app.exception.NotFoundException;
 import taskmanager.app.management.TaskManager;
 
 import java.io.IOException;
-import java.util.Optional;
 
 /**
  * Обработчик HTTP запросов для работы с задачами.
