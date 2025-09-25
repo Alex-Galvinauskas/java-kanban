@@ -1,8 +1,6 @@
 package taskmanager.app.service.history;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import taskmanager.app.entity.StatusTask;
 import taskmanager.app.entity.Task;
 import taskmanager.app.management.HistoryManager;
@@ -11,7 +9,6 @@ import taskmanager.app.management.TaskManager;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class InMemoryHistoryManagerTest {
     private HistoryManager historyManager;
     private TaskManager taskManager;
+    private TestInfo testInfo;
 
     private Task task1;
     private Task task2;
@@ -26,14 +24,21 @@ class InMemoryHistoryManagerTest {
 
 
     @BeforeEach
-    void setUp() {
+    void setUp(TestInfo testInfo) {
+        this.testInfo = testInfo;
+        System.out.printf("🚀 Подготовка теста: %s%n", testInfo.getDisplayName());
+
         historyManager = new InMemoryHistoryManager();
         taskManager = Managers.getDefault();
 
-        // Инициализация задач для тестов
         task1 = new Task(1, "Task 1", "Task 1 description", StatusTask.NEW);
         task2 = new Task(2, "Task 2", "Task 2 description", StatusTask.IN_PROGRESS);
         task3 = new Task(3, "Task 3", "Task 3 description", StatusTask.DONE);
+    }
+
+    @AfterEach
+    void tearDown() {
+        System.out.printf("✅ Тест завершен: %s%n%n", testInfo.getDisplayName());
     }
 
     @Test
@@ -178,11 +183,11 @@ class InMemoryHistoryManagerTest {
         taskManager.createTask(task1);
 
         //When
-        Optional<Task> retrievedTask = taskManager.getTaskById(1);
-        historyManager.add(retrievedTask.orElse(null));
+        Task retrievedTask = taskManager.getTaskById(1);
+        historyManager.add(retrievedTask);
 
         //Then
-        assertTrue(retrievedTask.isPresent(), "Задача должна существовать");
-        assertEquals(retrievedTask.get(), historyManager.getHistory().getFirst());
+        assertNotNull(retrievedTask, "Задача должна существовать");
+        assertEquals(retrievedTask, historyManager.getHistory().getFirst());
     }
 }

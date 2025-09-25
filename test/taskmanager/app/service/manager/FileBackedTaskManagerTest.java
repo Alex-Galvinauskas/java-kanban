@@ -1,9 +1,6 @@
 package taskmanager.app.service.manager;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import taskmanager.app.entity.*;
 import taskmanager.app.exception.ManagerSaveException;
@@ -21,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Тесты файлового менеджера задач")
 class FileBackedTaskManagerTest {
+    private TestInfo testInfo;
 
     @TempDir
     Path tempDir;
@@ -28,9 +26,17 @@ class FileBackedTaskManagerTest {
     private Path testFile;
 
     @BeforeEach
-    void setUp() {
+    void setUp(TestInfo testInfo) {
+        this.testInfo = testInfo;
+        System.out.printf("🚀 Подготовка теста: %s%n", testInfo.getDisplayName());
+
         testFile = tempDir.resolve("test_tasks.csv");
         manager = new FileBackedTasksManager(testFile);
+    }
+
+    @AfterEach
+    void tearDown() {
+        System.out.printf("✅ Тест завершен: %s%n%n", testInfo.getDisplayName());
     }
 
     @Nested
@@ -44,11 +50,11 @@ class FileBackedTaskManagerTest {
             Task task = new Task(manager.generateId(), "Task 1",
                     "Task 1 description", StatusTask.NEW);
             int taskId = manager.createTask(task);
-            Optional<Task> original = manager.getTaskById(taskId);
+            Task original = manager.getTaskById(taskId);
 
             //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-            Optional<Task> loadedTask = loadedManager.getTaskById(taskId);
+            Task loadedTask = loadedManager.getTaskById(taskId);
 
             //Then
             assertNotNull(loadedTask);
@@ -72,14 +78,14 @@ class FileBackedTaskManagerTest {
 
             //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-            Optional<Epic> loadedEpic = loadedManager.getEpicById(epicId);
+            Epic loadedEpic = loadedManager.getEpicById(epicId);
 
             //Then
-            assertTrue(loadedEpic.isPresent(), "Эпик должен существовать");
-            assertEquals(epic.getName(), loadedEpic.get().getName());
-            assertEquals(epic.getDescription(), loadedEpic.get().getDescription());
-            assertEquals(2, loadedEpic.get().getSubTaskIds().size());
-            assertEquals(StatusTask.IN_PROGRESS, loadedEpic.get().getStatus());
+            assertNotNull(loadedEpic, "Эпик должен существовать");
+            assertEquals(epic.getName(), loadedEpic.getName());
+            assertEquals(epic.getDescription(), loadedEpic.getDescription());
+            assertEquals(2, loadedEpic.getSubTaskIds().size());
+            assertEquals(StatusTask.IN_PROGRESS, loadedEpic.getStatus());
         }
 
         @Test
@@ -109,12 +115,12 @@ class FileBackedTaskManagerTest {
 
             //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-            Optional<Task> loadedTask = loadedManager.getTaskById(taskId);
+            Task loadedTask = loadedManager.getTaskById(taskId);
 
             //Then
-            assertTrue(loadedTask.isPresent(), "Задача должна существовать");
-            assertEquals("Task, with \"quotes\"", loadedTask.get().getName());
-            assertEquals("Description, with\nnewline", loadedTask.get().getDescription());
+            assertNotNull(loadedTask, "Задача должна существовать");
+            assertEquals("Task, with \"quotes\"", loadedTask.getName());
+            assertEquals("Description, with\nnewline", loadedTask.getDescription());
         }
 
         @Test
@@ -243,12 +249,12 @@ class FileBackedTaskManagerTest {
 
             //When
             FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-            Optional<Epic> loadedEpic = loadedManager.getEpicById(epicId);
+            Epic loadedEpic = loadedManager.getEpicById(epicId);
 
             //Then
-            assertTrue(loadedEpic.isPresent(), "Эпик должен существовать");
-            assertEquals(1, loadedEpic.get().getSubTaskIds().size());
-            assertTrue(loadedEpic.get().getSubTaskIds().contains(subTask.getId()));
+            assertNotNull(loadedEpic, "Эпик должен существовать");
+            assertEquals(1, loadedEpic.getSubTaskIds().size());
+            assertTrue(loadedEpic.getSubTaskIds().contains(subTask.getId()));
         }
 
         @Test
@@ -267,10 +273,10 @@ class FileBackedTaskManagerTest {
             manager.createSubTask(subTask2);
 
             //When
-            Optional<Epic> restoredEpic = manager.getEpicById(epicId);
+            Epic restoredEpic = manager.getEpicById(epicId);
             //Then
-            assertTrue(restoredEpic.isPresent(), "Эпик должен существовать");
-            assertEquals(StatusTask.IN_PROGRESS, restoredEpic.get().getStatus());
+            assertNotNull(restoredEpic, "Эпик должен существовать");
+            assertEquals(StatusTask.IN_PROGRESS, restoredEpic.getStatus());
         }
 
         @Test
@@ -283,10 +289,10 @@ class FileBackedTaskManagerTest {
             manager.createTask(task);
 
             //When
-            Optional<Task> restoredTask = manager.getTaskById(100);
+            Task restoredTask = manager.getTaskById(100);
             //Then
-            assertTrue(restoredTask.isPresent(), "Задача должна существовать");
-            assertEquals("Task 100", restoredTask.get().getName());
+            assertNotNull(restoredTask, "Задача должна существовать");
+            assertEquals("Task 100", restoredTask.getName());
         }
 
         @Test
@@ -301,12 +307,11 @@ class FileBackedTaskManagerTest {
             manager.createSubTask(subTask);
 
             //When
-            Optional<SubTask> restoredSubTask = manager.getSubTaskById(301);
+            SubTask restoredSubTask = manager.getSubTaskById(301);
             //Then
-            assertNotNull(restoredSubTask);
-            assertTrue(restoredSubTask.isPresent(), "Подзадача должна существовать");
-            assertEquals("SubTask", restoredSubTask.get().getName());
-            assertEquals(300, restoredSubTask.get().getEpicId());
+            assertNotNull(restoredSubTask, "Подзадача должна существовать");
+            assertEquals("SubTask", restoredSubTask.getName());
+            assertEquals(300, restoredSubTask.getEpicId());
         }
 
         @Test
@@ -373,17 +378,18 @@ class FileBackedTaskManagerTest {
 
                 // When
                 FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Task> loadedTask = loadedManager.getTaskById(taskId);
+                Task loadedTask = loadedManager.getTaskById(taskId);
 
                 // Then
-                assertTrue(loadedTask.isPresent(), "Задача должна существовать");
-                assertEquals("Complete Task", loadedTask.get().getName());
-                assertEquals("Task with all fields", loadedTask.get().getDescription());
-                assertEquals(StatusTask.IN_PROGRESS, loadedTask.get().getStatus());
-                assertEquals(duration, loadedTask.get().getDuration());
-                assertEquals(startTime, loadedTask.get().getStartTime());
-                assertEquals(startTime.plus(duration), loadedTask.get().getEndTime());
+                assertNotNull(loadedTask, "Задача должна существовать");
+                assertEquals("Complete Task", loadedTask.getName());
+                assertEquals("Task with all fields", loadedTask.getDescription());
+                assertEquals(StatusTask.IN_PROGRESS, loadedTask.getStatus());
+                assertEquals(duration, loadedTask.getDuration());
+                assertEquals(startTime, loadedTask.getStartTime());
+                assertEquals(startTime.plus(duration), loadedTask.getEndTime());
             }
+
 
             @Test
             @DisplayName("Сохранение и загрузка эпика со всеми полями")
@@ -399,7 +405,7 @@ class FileBackedTaskManagerTest {
 
                 // When
                 FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Epic> loadedEpic = loadedManager.getEpicById(epicId);
+                Optional<Epic> loadedEpic = Optional.ofNullable(loadedManager.getEpicById(epicId));
 
                 // Then
                 assertTrue(loadedEpic.isPresent(), "Эпик должен существовать");
@@ -427,7 +433,7 @@ class FileBackedTaskManagerTest {
 
                 // When
                 FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<SubTask> loadedSubTask = loadedManager.getSubTaskById(subTaskId);
+                Optional<SubTask> loadedSubTask = Optional.ofNullable(loadedManager.getSubTaskById(subTaskId));
 
                 // Then
                 assertTrue(loadedSubTask.isPresent(), "Подзадача должна существовать");
@@ -454,7 +460,7 @@ class FileBackedTaskManagerTest {
 
                 // When
                 FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Task> loadedTask = loadedManager.getTaskById(taskId);
+                Optional<Task> loadedTask = Optional.ofNullable(loadedManager.getTaskById(taskId));
 
                 // Then
                 assertTrue(loadedTask.isPresent(), "Задача должна существовать");
@@ -473,7 +479,7 @@ class FileBackedTaskManagerTest {
 
                 // When
                 FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Epic> loadedEpic = loadedManager.getEpicById(epicId);
+                Optional<Epic> loadedEpic = Optional.ofNullable(loadedManager.getEpicById(epicId));
 
                 // Then
                 assertTrue(loadedEpic.isPresent(), "Эпик должен существовать");
@@ -526,12 +532,12 @@ class FileBackedTaskManagerTest {
 
                 // When
                 FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Task> loadedTask = loadedManager.getTaskById(taskId);
+                Task loadedTask = loadedManager.getTaskById(taskId);
 
                 // Then
-                assertTrue(loadedTask.isPresent(), "Задача должна существовать");
-                assertEquals(nameWithSpecialChars, loadedTask.get().getName());
-                assertEquals(descriptionWithSpecialChars, loadedTask.get().getDescription());
+                assertNotNull(loadedTask, "Задача должна существовать");
+                assertEquals(nameWithSpecialChars, loadedTask.getName());
+                assertEquals(descriptionWithSpecialChars, loadedTask.getDescription());
             }
 
             @Test
@@ -599,29 +605,27 @@ class FileBackedTaskManagerTest {
 
                 // When - первая загрузка
                 FileBackedTasksManager firstLoad = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Task> firstLoadedTask = firstLoad.getTaskById(taskId);
+                Task firstLoadedTask = firstLoad.getTaskById(taskId);
 
                 // Изменяем задачу и сохраняем снова
-                firstLoadedTask.ifPresent(task -> {
-                    task.setStatus(StatusTask.DONE);
-                    firstLoad.updateTask(task);
-                });
+                if (firstLoadedTask != null) {
+                    firstLoadedTask.setStatus(StatusTask.DONE);
+                    firstLoad.updateTask(firstLoadedTask);
+                }
 
                 // Вторая загрузка
                 FileBackedTasksManager secondLoad = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Task> secondLoadedTask = secondLoad.getTaskById(taskId);
+                Task secondLoadedTask = secondLoad.getTaskById(taskId);
 
                 // Then
-                assertTrue(firstLoadedTask.isPresent(),
-                        "Задача должна существовать при первой загрузке");
-                assertTrue(secondLoadedTask.isPresent(),
-                        "Задача должна существовать при второй загрузке");
+                assertNotNull(firstLoadedTask, "Задача должна существовать при первой загрузке");
+                assertNotNull(secondLoadedTask, "Задача должна существовать при второй загрузке");
 
-                assertEquals(StatusTask.DONE, secondLoadedTask.get().getStatus());
-                assertEquals("Original Task", secondLoadedTask.get().getName());
-                assertEquals("Original description", secondLoadedTask.get().getDescription());
-                assertEquals(duration, secondLoadedTask.get().getDuration());
-                assertEquals(startTime, secondLoadedTask.get().getStartTime());
+                assertEquals(StatusTask.DONE, secondLoadedTask.getStatus());
+                assertEquals("Original Task", secondLoadedTask.getName());
+                assertEquals("Original description", secondLoadedTask.getDescription());
+                assertEquals(duration, secondLoadedTask.getDuration());
+                assertEquals(startTime, secondLoadedTask.getStartTime());
             }
         }
 
@@ -642,12 +646,12 @@ class FileBackedTaskManagerTest {
 
                 // When
                 FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Task> loadedTask = loadedManager.getTaskById(taskId);
+                Task loadedTask = loadedManager.getTaskById(taskId);
 
                 // Then
-                assertTrue(loadedTask.isPresent(), "Задача должна существовать");
-                assertEquals(maxDuration, loadedTask.get().getDuration());
-                assertEquals(startTime.plus(maxDuration), loadedTask.get().getEndTime());
+                assertNotNull(loadedTask, "Задача должна существовать");
+                assertEquals(maxDuration, loadedTask.getDuration());
+                assertEquals(startTime.plus(maxDuration), loadedTask.getEndTime());
             }
 
             @Test
@@ -663,12 +667,12 @@ class FileBackedTaskManagerTest {
 
                 // When
                 FileBackedTasksManager loadedManager = FileBackedTasksManager.loadFromFile(testFile);
-                Optional<Task> loadedTask = loadedManager.getTaskById(taskId);
+                Task loadedTask = loadedManager.getTaskById(taskId);
 
                 // Then
-                assertTrue(loadedTask.isPresent(), "Задача должна существовать");
-                assertEquals(zeroDuration, loadedTask.get().getDuration());
-                assertEquals(startTime, loadedTask.get().getEndTime());
+                assertNotNull(loadedTask, "Задача должна существовать");
+                assertEquals(zeroDuration, loadedTask.getDuration());
+                assertEquals(startTime, loadedTask.getEndTime());
             }
         }
 
@@ -699,12 +703,12 @@ class FileBackedTaskManagerTest {
 
                 for (int i = 0; i < 50; i++) {
                     int taskId = i + 1;
-                    Optional<Task> task = loadedManager.getTaskById(taskId);
-                    assertTrue(task.isPresent(), "Задача " + taskId + " должна существовать");
-                    assertEquals("Task " + i, task.get().getName());
-                    assertEquals("Description " + i, task.get().getDescription());
-                    assertNotNull(task.get().getStartTime());
-                    assertNotNull(task.get().getDuration());
+                    Task task = loadedManager.getTaskById(taskId);
+                    assertNotNull(task, "Задача " + taskId + " должна существовать");
+                    assertEquals("Task " + i, task.getName());
+                    assertEquals("Description " + i, task.getDescription());
+                    assertNotNull(task.getStartTime());
+                    assertNotNull(task.getDuration());
                 }
             }
         }

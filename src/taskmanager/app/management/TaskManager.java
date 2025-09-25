@@ -3,11 +3,11 @@ package taskmanager.app.management;
 import taskmanager.app.entity.Epic;
 import taskmanager.app.entity.SubTask;
 import taskmanager.app.entity.Task;
+import taskmanager.app.exception.NotFoundException;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public interface TaskManager {
 
@@ -19,17 +19,17 @@ public interface TaskManager {
 
     List<Task> getAllTasks();
 
-    Optional<Task> getTaskById(int id);
+    Task getTaskById(int id) throws NotFoundException;
 
     List<Epic> getAllEpics();
 
-    Optional<Epic> getEpicById(int id);
+    Epic getEpicById(int id) throws NotFoundException;
 
     List<SubTask> getSubTasksByEpicId(int epicId);
 
     List<SubTask> getAllSubTasks();
 
-    Optional<SubTask> getSubTaskById(int id);
+    SubTask getSubTaskById(int id) throws NotFoundException;
 
     Collection<Task> getHistory();
 
